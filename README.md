@@ -2,6 +2,19 @@
 
 **Protected space for data governance, lineage, and privacy-aware operations**
 
+***
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build](https://github.com/witlox/lacuna/actions/workflows/build.yml/badge.svg)](https://github.com/witlox/lacuna/actions/workflows/build.yml)
+[![Test](https://github.com/witlox/lacuna/actions/workflows/test.yml/badge.svg)](https://github.com/witlox/lacuna/actions/workflows/test.yml)
+[![Validate](https://github.com/witlox/lacuna/actions/workflows/validate.yml/badge.svg)](https://github.com/witlox/lacuna/actions/workflows/validate.yml)
+[![Package](https://github.com/witlox/lacuna/actions/workflows/package.yml/badge.svg)](https://github.com/witlox/lacuna/actions/workflows/package.yml)
+[![codecov](https://codecov.io/gh/witlox/lacuna/branch/main/graph/badge.svg)](https://codecov.io/gh/witlox/lacuna)
+***
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwitlox%2Flacuna.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwitlox%2Flacuna?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwitlox%2Flacuna.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwitlox%2Flacuna?ref=badge_shield&issueType=security)
+***
+
+
 ## The Problem
 
 Organizations deploying local LLMs and data platforms face a critical challenge: **How do you enable self-service data access while maintaining governance, lineage tracking, and compliance?**
