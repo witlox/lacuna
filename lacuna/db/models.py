@@ -43,8 +43,8 @@ class ClassificationModel(Base):
     # Lineage
     parent_id = Column(UUID(as_uuid=True), ForeignKey("classifications.id"))
 
-    # Metadata
-    metadata = Column(JSON, default=dict)
+    # Extra data
+    extra_data = Column(JSON, default=dict)
 
     # Relationships
     parent = relationship("ClassificationModel", remote_side=[id])
@@ -78,8 +78,8 @@ class LineageEdgeModel(Base):
         UUID(as_uuid=True), ForeignKey("classifications.id")
     )
 
-    # Metadata
-    metadata = Column(JSON, default=dict)
+    # Extra data
+    extra_data = Column(JSON, default=dict)
 
     # Relationships
     source_classification = relationship(
@@ -195,10 +195,10 @@ class PolicyEvaluationModel(Base):
     # Classification at time of evaluation
     classification_id = Column(UUID(as_uuid=True), ForeignKey("classifications.id"))
 
-    # Evaluation metadata
+    # Evaluation extra data
     evaluation_duration_ms = Column(Float)
     alternatives = Column(JSON, default=list)
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
 
     # Relationships
     classification = relationship("ClassificationModel")

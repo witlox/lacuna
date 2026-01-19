@@ -145,6 +145,9 @@ all = [
     "lacuna[dev,llamaindex,langchain,chromadb,milvus,plugins-all]",
 ]
 
+[project.scripts]
+lacuna = "lacuna.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/witlox/lacuna"
 Documentation = "https://github.com/witlox/lacuna/tree/main/docs"

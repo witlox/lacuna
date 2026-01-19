@@ -1,0 +1,39 @@
+# Plugins Configuration
+# Enable and configure classification plugins
+
+plugins:
+  # Presidio PII Detection
+  presidio:
+    enabled: false  # Enable when presidio is installed
+    priority: 5  # High priority (runs early)
+    entities:
+      - PHONE_NUMBER
+      - EMAIL_ADDRESS
+      - CREDIT_CARD
+      - SSN
+      - PERSON
+      - LOCATION
+    languages:
+      - en
+    score_threshold: 0.7
+
+  # SetFit Few-Shot Classification
+  setfit:
+    enabled: false  # Enable when setfit is installed
+    priority: 20
+    model_path: null  # Path to pretrained model
+    auto_retrain: true
+    retrain_threshold: 50  # Corrections before retraining
+
+  # Open Policy Agent
+  opa:
+    enabled: false  # Enable when OPA is running
+    priority: 10
+    endpoint: http://localhost:8181
+    policy_path: lacuna/classification
+    timeout: 1.0
+    fallback_on_error: true
+
+  # Custom plugins (add your own)
+  custom: []
+

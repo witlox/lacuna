@@ -1,0 +1,37 @@
+"""Health check endpoints."""
+
+from typing import Any, Dict
+
+from fastapi import APIRouter
+
+from lacuna.__version__ import __version__
+from lacuna.config import get_settings
+
+router = APIRouter()
+
+
+@router.get("/health")
+async def health_check() -> Dict[str, Any]:
+    """Basic health check endpoint."""
+    return {
+        "status": "healthy",
+        "version": __version__,
+    }
+
+
+@router.get("/health/ready")
+async def readiness_check() -> Dict[str, Any]:
+    """Readiness check for Kubernetes."""
+    settings = get_settings()
+    return {
+        "status": "ready",
+        "version": __version__,
+        "environment": settings.environment,
+    }
+
+
+@router.get("/health/live")
+async def liveness_check() -> Dict[str, str]:
+    """Liveness check for Kubernetes."""
+    return {"status": "alive"}
+

@@ -1,0 +1,91 @@
+# Classification Patterns Configuration
+# Regex patterns for heuristic classification
+
+patterns:
+  # PII patterns (PROPRIETARY)
+  pii:
+    - name: email
+      pattern: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - EMAIL
+
+    - name: ssn
+      pattern: '\b\d{3}-\d{2}-\d{4}\b'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - SSN
+
+    - name: phone
+      pattern: '\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - PHONE
+
+    - name: credit_card
+      pattern: '\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - FINANCIAL
+        - CREDIT_CARD
+
+  # File path patterns
+  paths:
+    - name: customer_data
+      pattern: '/customer[s]?/'
+      tier: PROPRIETARY
+      tags:
+        - CUSTOMER_DATA
+
+    - name: pii_folder
+      pattern: '/pii/'
+      tier: PROPRIETARY
+      tags:
+        - PII
+
+    - name: internal_docs
+      pattern: '/internal/'
+      tier: INTERNAL
+      tags:
+        - INTERNAL_DOCS
+
+    - name: public_docs
+      pattern: '/public/'
+      tier: PUBLIC
+      tags:
+        - PUBLIC_DOCS
+
+  # Column name patterns
+  columns:
+    - name: email_column
+      pattern: '(^|_)(email|e_mail|email_address)($|_)'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - EMAIL
+
+    - name: phone_column
+      pattern: '(^|_)(phone|phone_number|mobile|cell)($|_)'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - PHONE
+
+    - name: ssn_column
+      pattern: '(^|_)(ssn|social_security|tax_id)($|_)'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - SSN
+
+    - name: name_column
+      pattern: '(^|_)(full_name|first_name|last_name|customer_name)($|_)'
+      tier: PROPRIETARY
+      tags:
+        - PII
+        - NAME
+

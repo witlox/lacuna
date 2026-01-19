@@ -1,0 +1,92 @@
+# Lacuna Default Configuration
+  format: json  # json or text
+  level: INFO
+logging:
+# Logging
+
+  api_key: null  # Set for production
+  port: 8000
+  host: 0.0.0.0
+api:
+# API configuration
+
+  public_web_search: true
+  public_local_rag: true
+  internal_web_search: false
+  internal_local_rag: true
+  proprietary_web_search: false
+  proprietary_local_rag: true
+routing:
+# Routing rules for different tiers
+
+  loki_url: null
+  prometheus_port: 9090
+  enabled: true
+monitoring:
+# Monitoring
+
+  opa_timeout: 1.0
+  opa_policy_path: lacuna/classification
+  opa_endpoint: null  # e.g., http://localhost:8181
+  enabled: false  # Enable when OPA is configured
+policy:
+# Policy engine (OPA integration)
+
+  alert_enabled: true
+  verify_integrity: true
+  retention_days: 2555  # 7 years
+  enabled: true
+audit:
+# Audit logging (ISO 27001 compliant)
+
+  max_depth: 10
+  sampling_rate: 1.0
+  enabled: true
+lineage:
+# Lineage tracking
+
+  llm_max_tokens: 500
+  llm_temperature: 0.1
+  llm_model: null
+  llm_endpoint: null  # e.g., http://localhost:8080/v1
+  llm_priority: 80
+  llm_enabled: false  # Enable when LLM endpoint is configured
+  # LLM layer (fallback for complex cases)
+
+  embedding_device: cpu
+  embedding_model: BAAI/bge-large-en-v1.5
+  embedding_priority: 70
+  embedding_enabled: true
+  # Embedding layer (semantic similarity)
+
+  heuristic_priority: 60
+  heuristic_enabled: true
+  # Heuristic layer (fastest)
+
+  short_circuit: true
+  confidence_threshold: 0.9
+  strategy: conservative  # conservative, balanced, aggressive
+classification:
+# Classification pipeline
+
+  enabled: true
+  ttl: 3600
+  url: redis://localhost:6379/0
+redis:
+# Redis configuration for caching
+
+  echo: false
+  max_overflow: 10
+  pool_size: 20
+  url: postgresql://lacuna:lacuna@localhost:5432/lacuna
+database:
+# Database configuration
+
+  debug: false
+  environment: development
+  version: 0.1.0
+  name: Lacuna
+app:
+
+# Copy to config/local.yaml for local overrides
+

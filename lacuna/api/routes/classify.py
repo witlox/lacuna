@@ -1,0 +1,123 @@
+"""Classification API endpoints."""
+
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from lacuna.api.app import get_engine
+from lacuna.engine.governance import GovernanceEngine
+from lacuna.models.classification import ClassificationContext
+
+router = APIRouter()
+
+
+class ClassifyRequest(BaseModel):
+    """Request model for classification."""
+
+    query: str = Field(..., description="Query or text to classify")
+    project: Optional[str] = Field(None, description="Project context")
+    user_id: Optional[str] = Field(None, description="User identifier")
+    user_role: Optional[str] = Field(None, description="User role")
+    environment: Optional[str] = Field(None, description="Environment (dev/staging/prod)")
+    conversation: Optional[List[Dict[str, str]]] = Field(
+        None, description="Previous conversation messages"
+    )
+
+
+class ClassifyResponse(BaseModel):
+    """Response model for classification."""
+
+    tier: str = Field(..., description="Classification tier (PROPRIETARY/INTERNAL/PUBLIC)")
+    confidence: float = Field(..., description="Classification confidence (0.0-1.0)")
+    reasoning: str = Field(..., description="Explanation for classification")
+    tags: List[str] = Field(default_factory=list, description="Data tags (PII, PHI, etc.)")
+    classifier: str = Field(..., description="Classifier that made the decision")
+    latency_ms: Optional[float] = Field(None, description="Classification latency")
+
+
+@router.post("/classify", response_model=ClassifyResponse)
+async def classify(
+    request: ClassifyRequest,
+    engine: GovernanceEngine = Depends(get_engine),
+) -> ClassifyResponse:
+    """Classify a query or text for data sensitivity.
+
+    Returns the classification tier, confidence, and reasoning.
+    """
+    context = ClassificationContext(
+        user_id=request.user_id,
+        user_role=request.user_role,
+        project=request.project,
+        environment=request.environment,
+        conversation=request.conversation or [],
+    )
+
+    try:
+        import time
+        start = time.time()
+
+        classification = engine.classify(request.query, context)
+
+        latency = (time.time() - start) * 1000
+
+        return ClassifyResponse(
+            tier=classification.tier.value,
+            confidence=classification.confidence,
+            reasoning=classification.reasoning,
+            tags=classification.tags,
+            classifier=classification.classifier_name,
+            latency_ms=round(latency, 2),
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class BatchClassifyRequest(BaseModel):
+    """Request model for batch classification."""
+
+    queries: List[str] = Field(..., description="List of queries to classify")
+    project: Optional[str] = Field(None, description="Project context")
+    user_id: Optional[str] = Field(None, description="User identifier")
+
+
+class BatchClassifyResponse(BaseModel):
+    """Response model for batch classification."""
+
+    results: List[ClassifyResponse]
+    total_latency_ms: float
+
+
+@router.post("/classify/batch", response_model=BatchClassifyResponse)
+async def classify_batch(
+    request: BatchClassifyRequest,
+    engine: GovernanceEngine = Depends(get_engine),
+) -> BatchClassifyResponse:
+    """Classify multiple queries in a batch."""
+    import time
+    start = time.time()
+
+    results = []
+    context = ClassificationContext(
+        user_id=request.user_id,
+        project=request.project,
+    )
+
+    for query in request.queries:
+        classification = engine.classify(query, context)
+        results.append(
+            ClassifyResponse(
+                tier=classification.tier.value,
+                confidence=classification.confidence,
+                reasoning=classification.reasoning,
+                tags=classification.tags,
+                classifier=classification.classifier_name,
+            )
+        )
+
+    return BatchClassifyResponse(
+        results=results,
+        total_latency_ms=round((time.time() - start) * 1000, 2),
+    )
+

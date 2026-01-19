@@ -1,0 +1,28 @@
+# Proprietary Terms Configuration
+# Add your organization-specific terms here
+
+# Project names that should be classified as PROPRIETARY
+projects:
+  - project_apollo
+  - project_nexus
+  - internal_dashboard
+  - customer_portal
+
+# Customer names that should trigger PROPRIETARY classification
+customers:
+  - acme_corp
+  - megacorp
+  - enterprise_client
+
+# Terms that indicate proprietary data
+terms:
+  - confidential
+  - proprietary
+  - internal_only
+  - trade_secret
+  - strategic_plan
+  - pricing_model
+  - revenue_forecast
+  - customer_list
+  - acquisition_target
+
