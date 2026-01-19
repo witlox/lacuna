@@ -1,6 +1,6 @@
-# Contributing to Vesper
+# Contributing to Lacuna
 
-Thank you for your interest in contributing! This is a research project exploring the future of LLM-native software development.
+Thank you for your interest in contributing! This is a data governance and lineage tracking project focused on enabling self-service data access while maintaining compliance and policy enforcement.
 
 ## Table of Contents
 
@@ -37,56 +37,62 @@ We pledge to make participation in this project a harassment-free experience for
 
 ### Areas We Need Help
 
-🔨 **Python Code Generator**
-- Implement flow step generators (database, API calls, etc.)
-- Add contract validation
-- Improve error handling
-- Generate more idiomatic Python
+🔐 **Classification Pipeline**
+- Improve heuristics for common data patterns
+- Add embedding models for semantic classification
+- Optimize LLM prompts for context-aware decisions
+- Add support for custom data types
 
-🦀 **Rust Direct Runtime**
-- Core semantic IR interpreter
-- JIT compiler integration
-- Operation implementations
-- Performance optimization
+📊 **Lineage Tracking**
+- Track lineage across SQL transformations
+- Support for complex joins and aggregations
+- Integration with dbt lineage graphs
+- Visualization improvements
 
-🧪 **Testing Infrastructure**
-- Differential testing framework
-- Property-based testing
-- Confidence calculation
-- Verification dashboards
+🛡️ **Policy Engine**
+- OPA policy templates for common use cases
+- Policy testing framework
+- Integration with external policy systems
+- Real-time policy evaluation optimization
 
 📚 **Documentation**
 - Examples and tutorials
 - Architecture decision records
 - Best practices guides
-- API documentation
+- Integration guides for various platforms
 
 🎨 **Tooling**
-- IDE plugins (VS Code, IntelliJ)
-- Debugger improvements
-- Dashboard features
+- IDE plugins (VS Code, PyCharm)
+- Jupyter notebook integration improvements
+- Web dashboard features
 - CLI enhancements
 
-📊 **Research**
-- Performance benchmarking
-- Formal verification
-- Security analysis
-- Case studies
+🔍 **Audit & Compliance**
+- ISO 27001 report generators
+- GDPR compliance utilities
+- HIPAA audit trail support
+- Retention policy automation
+
+🔌 **Integrations**
+- Databricks Unity Catalog integration
+- Snowflake governance features
+- AWS Lake Formation support
+- Azure Purview connectors
 
 ## Development Setup
 
 ### Prerequisites
 
 - Python 3.10+
-- Rust 1.70+
 - PostgreSQL 14+
 - Git
+- Optional: Docker (for containerized deployment)
 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/witlox/vesper.git
-cd vesper
+git clone https://github.com/witlox/lacuna.git
+cd lacuna
 ```
 
 ### Python Setup
@@ -97,7 +103,6 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-cd python
 pip install -e ".[dev]"
 
 # Install pre-commit hooks
@@ -107,40 +112,46 @@ pre-commit install
 pytest
 ```
 
-### Rust Setup
-
-```bash
-cd rust
-cargo build
-cargo test
-```
-
 ### Database Setup
 
 ```bash
 # Create database
-createdb vesper_dev
+createdb lacuna_dev
 
 # Run migrations
-cd python
 alembic upgrade head
+```
+
+### OPA (Open Policy Agent) Setup
+
+```bash
+# Install OPA (macOS)
+brew install opa
+
+# Or download from https://www.openpolicyagent.org/docs/latest/#running-opa
+
+# Verify installation
+opa version
 ```
 
 ### Verify Installation
 
 ```bash
 # Test CLI
-vesper --version
+lacuna --version
 
-# Run example
-vesper run examples/hello_world.vsp --mode python_only
+# Run example classification
+lacuna classify --file examples/sample_data.csv
+
+# Start development server
+lacuna server --dev
 ```
 
 ## How to Contribute
 
 ### 1. Find an Issue
 
-Browse [open issues](https://github.com/witlox/vesper/issues) or create a new one.
+Browse [open issues](https://github.com/witlox/lacuna/issues) or create a new one.
 
 **Good first issues are labeled:** `good-first-issue`, `help-wanted`, `documentation`
 
@@ -178,9 +189,9 @@ Follow our [coding standards](#coding-standards) and write tests.
 Use clear, descriptive commit messages:
 
 ```bash
-git commit -m "feat: add database query operation to Python generator"
-git commit -m "fix: handle timeout errors in API calls"
-git commit -m "docs: add example for payment processing"
+git commit -m "feat: add PII detection to classification pipeline"
+git commit -m "fix: handle lineage tracking for complex SQL joins"
+git commit -m "docs: add example for policy enforcement workflow"
 ```
 
 **Commit message format:**
@@ -261,31 +272,31 @@ Fixes #123
 
 ```python
 # Good
-def execute_semantic_node(
-    node_id: str,
-    inputs: Dict[str, Any],
-    mode: ExecutionMode = ExecutionMode.PYTHON_ONLY
-) -> Result:
+def classify_data_operation(
+    operation: DataOperation,
+    context: ClassificationContext,
+    use_llm: bool = False
+) -> ClassificationResult:
     """
-    Execute a semantic node with specified inputs.
-    
+    Classify a data operation using the three-layer pipeline.
+
     Args:
-        node_id: Unique identifier for the node
-        inputs: Input parameters matching node schema
-        mode: Execution mode (python_only, shadow_direct, etc.)
-        
+        operation: The data operation to classify (read, write, export, etc.)
+        context: Contextual information (user, lineage, conversation)
+        use_llm: Whether to use LLM layer for complex decisions
+
     Returns:
-        Result object with output or error
-        
+        ClassificationResult with tier, tags, and confidence
+
     Raises:
-        ValidationError: If inputs don't match schema
-        ExecutionError: If execution fails
+        ValidationError: If operation data is invalid
+        ClassificationError: If classification fails
     """
     # Implementation
     pass
 
 # Bad
-def exec(n,i,m=0):  # No type hints, unclear names
+def classify(op, ctx, llm=False):  # No type hints, unclear names
     pass
 ```
 
@@ -304,77 +315,90 @@ ruff check python/
 mypy python/
 ```
 
-### Rust
+### OPA (Open Policy Agent) Policies
 
-**Style Guide:** Rust standard style
+**Style Guide:** Rego best practices
 
-```rust
-// Good
-pub async fn execute_semantic_node(
-    node_id: &str,
-    inputs: HashMap<String, Value>,
-    mode: ExecutionMode,
-) -> Result<Output> {
-    /// Execute a semantic node with specified inputs.
-    ///
-    /// # Arguments
-    /// * `node_id` - Unique identifier for the node
-    /// * `inputs` - Input parameters matching node schema
-    /// * `mode` - Execution mode
-    ///
-    /// # Returns
-    /// Result with output or error
-    ///
-    /// # Errors
-    /// Returns error if validation fails or execution fails
-    
-    // Implementation
+```rego
+# Good - clear, well-documented policy
+package lacuna.policies.pii_export
+
+import future.keywords.if
+import future.keywords.in
+
+# Deny PII exports to unmanaged locations
+deny[msg] if {
+    input.operation.type == "export"
+    input.data.classification.tier == "PROPRIETARY"
+    "PII" in input.data.tags
+    not is_managed_location(input.operation.destination)
+
+    msg := sprintf(
+        "Cannot export PII data to unmanaged location: %s",
+        [input.operation.destination]
+    )
 }
 
-// Bad
-pub fn exec(n: &str, i: HashMap<String, Value>) -> Result<Output> {
-    // No docs, unclear names
+# Helper: Check if destination is managed
+is_managed_location(path) if {
+    startswith(path, "/governed/")
+}
+
+# Bad - unclear, no documentation
+deny[msg] if {
+    input.op.t == "exp"
+    input.d.c == "P"
+    msg := "denied"
 }
 ```
 
 **Key points:**
-- Use `rustfmt` for formatting
-- Use `clippy` for linting
-- Document all public APIs
-- Use meaningful variable names
-- Handle errors with `Result`/`anyhow`
+- Use descriptive package names
+- Document policy intent and rules
+- Use helper functions for clarity
+- Include examples in comments
+- Test policies with sample data
 
-**Run formatters:**
+**Run tests:**
 ```bash
-cargo fmt
-cargo clippy
+opa test policies/
 ```
 
-### YAML (Vesper)
+### SQL & Database
 
-```yaml
-# Good - clear, well-documented
-node_id: payment_processor_v1
-type: payment_handler
-intent: process_credit_card_payment  # Clear intent
+```sql
+-- Good - properly structured migration
+-- Migration: 2025_01_add_lineage_tracking
+-- Description: Add lineage tracking tables for data operations
 
-inputs:
-  amount:
-    type: decimal
-    required: true
-    constraints:
-      - positive
-      - max: 50000
-    description: Payment amount in USD  # Helpful description
+CREATE TABLE IF NOT EXISTS lineage_edges (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_artifact_id UUID NOT NULL REFERENCES artifacts(id),
+    target_artifact_id UUID NOT NULL REFERENCES artifacts(id),
+    operation_type VARCHAR(50) NOT NULL,  -- 'transform', 'join', 'export', etc.
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    metadata JSONB,
+    CONSTRAINT unique_lineage_edge UNIQUE (source_artifact_id, target_artifact_id, operation_type)
+);
 
-# Bad - unclear, minimal documentation
-node_id: pay_v1
-type: handler
-intent: pay
+CREATE INDEX idx_lineage_source ON lineage_edges(source_artifact_id);
+CREATE INDEX idx_lineage_target ON lineage_edges(target_artifact_id);
 
-inputs:
-  a: {type: decimal}  # What is 'a'?
+-- Bad - unclear structure, no constraints
+CREATE TABLE lineage (
+    id SERIAL,
+    src TEXT,
+    dst TEXT,
+    op TEXT
+);
 ```
+
+**Key points:**
+- Use descriptive table and column names
+- Add comments explaining purpose
+- Include appropriate constraints and indexes
+- Use proper data types (UUID, TIMESTAMP, JSONB)
+- Follow migration naming conventions
 
 ## Testing Requirements
 
@@ -391,24 +415,24 @@ inputs:
 Test individual functions:
 
 ```python
-def test_contract_validator_preconditions():
-    """Test precondition validation"""
-    validator = ContractValidator()
-    
-    # Valid case
-    result = validator.validate_preconditions(
-        preconditions=["amount > 0"],
-        context={"amount": 100}
+def test_pii_classifier_detection():
+    """Test PII detection in data classification"""
+    classifier = PIIClassifier()
+
+    # Valid case - should detect PII
+    result = classifier.classify_dataframe(
+        df=pd.DataFrame({"email": ["user@example.com"], "name": ["John Doe"]}),
+        context={}
     )
-    assert result.valid
-    
-    # Invalid case
-    result = validator.validate_preconditions(
-        preconditions=["amount > 0"],
-        context={"amount": -10}
+    assert "PII" in result.tags
+    assert result.tier == DataTier.PROPRIETARY
+
+    # Invalid case - no PII
+    result = classifier.classify_dataframe(
+        df=pd.DataFrame({"count": [100], "category": ["A"]}),
+        context={}
     )
-    assert not result.valid
-    assert "amount > 0" in result.error_message
+    assert "PII" not in result.tags
 ```
 
 **2. Integration Tests**
@@ -416,38 +440,60 @@ def test_contract_validator_preconditions():
 Test components together:
 
 ```python
-def test_python_generator_end_to_end():
-    """Test complete code generation pipeline"""
-    # Load Vesper
-    vesper_node = load_vesper_file("test_cases/hello_world.vsp")
-    
-    # Generate Python
-    generator = PythonGenerator()
-    python_code = generator.generate(vesper_node)
-    
-    # Compile and execute
-    exec(python_code)
-    result = hello_world_v1(name="Alice")
-    
-    assert isinstance(result, HelloWorldSuccess)
-    assert "Alice" in result.message
+def test_policy_enforcement_end_to_end():
+    """Test complete policy enforcement pipeline"""
+    # Create test data with PII
+    test_df = pd.DataFrame({
+        "customer_id": [1, 2, 3],
+        "email": ["test@example.com", "user@example.com", "admin@example.com"],
+        "purchase_amount": [100.0, 200.0, 150.0]
+    })
+
+    # Classify data
+    classifier = DataClassifier()
+    classification = classifier.classify(test_df)
+    assert classification.tier == DataTier.PROPRIETARY
+
+    # Try to export (should be blocked)
+    policy_engine = PolicyEngine()
+    result = policy_engine.evaluate_operation(
+        operation=DataOperation(type="export", destination="~/Downloads/data.csv"),
+        classification=classification,
+        user=User(role="analyst")
+    )
+
+    assert result.allowed is False
+    assert "PII" in result.reason
+    assert len(result.alternatives) > 0
 ```
 
-**3. Differential Tests**
+**3. Lineage Validation Tests**
 
-Compare Python and Rust outputs:
+Validate lineage tracking across operations:
 
 ```python
-def test_payment_handler_differential():
-    """Test payment handler produces identical outputs"""
-    tester = DifferentialTester('payment_handler_v1')
-    report = tester.run_tests(num_tests=1000)
-    
-    assert report.accuracy >= 0.999, \
-        f"Accuracy {report.accuracy} below threshold"
-    
-    if report.divergences > 0:
-        pytest.fail(f"Found {report.divergences} divergences")
+def test_lineage_propagation_through_joins():
+    """Test that classification propagates correctly through joins"""
+    # Create proprietary data
+    customers = pd.DataFrame({"customer_id": [1, 2], "email": ["a@b.com", "c@d.com"]})
+    customers_classified = classify_dataframe(customers, tier=DataTier.PROPRIETARY)
+
+    # Create internal data
+    orders = pd.DataFrame({"customer_id": [1, 2], "amount": [100, 200]})
+    orders_classified = classify_dataframe(orders, tier=DataTier.INTERNAL)
+
+    # Join operation
+    lineage_tracker = LineageTracker()
+    result = customers_classified.merge(orders_classified, on="customer_id")
+
+    # Verify lineage tracking
+    lineage = lineage_tracker.get_lineage(result.artifact_id)
+    assert len(lineage.sources) == 2
+    assert customers_classified.artifact_id in lineage.sources
+    assert orders_classified.artifact_id in lineage.sources
+
+    # Verify classification propagation (should inherit highest tier)
+    assert result.classification.tier == DataTier.PROPRIETARY
 ```
 
 **4. Property-Based Tests**
@@ -458,44 +504,64 @@ Test invariants:
 from hypothesis import given, strategies as st
 
 @given(
-    amount=st.decimals(min_value='0.01', max_value='10000'),
-    user_id=st.text(min_size=1)
+    tier1=st.sampled_from([DataTier.PUBLIC, DataTier.INTERNAL, DataTier.PROPRIETARY]),
+    tier2=st.sampled_from([DataTier.PUBLIC, DataTier.INTERNAL, DataTier.PROPRIETARY])
 )
-def test_payment_idempotency(amount, user_id):
-    """Property: Same idempotency key returns same result"""
-    key = "test_key"
-    
-    result1 = execute_node('payment_handler_v1', {
-        'amount': amount,
-        'user_id': user_id,
-        'idempotency_key': key
-    })
-    
-    result2 = execute_node('payment_handler_v1', {
-        'amount': amount,
-        'user_id': user_id,
-        'idempotency_key': key
-    })
-    
-    assert result1 == result2
+def test_classification_propagation_invariant(tier1, tier2):
+    """Property: Classification always inherits highest tier"""
+    # Create two dataframes with different tiers
+    df1 = pd.DataFrame({"id": [1, 2], "value": [100, 200]})
+    df1_classified = classify_dataframe(df1, tier=tier1)
+
+    df2 = pd.DataFrame({"id": [1, 2], "amount": [10, 20]})
+    df2_classified = classify_dataframe(df2, tier=tier2)
+
+    # Merge them
+    result = df1_classified.merge(df2_classified, on="id")
+
+    # Result should have the highest tier
+    expected_tier = max(tier1, tier2, key=lambda t: t.value)
+    assert result.classification.tier == expected_tier
+
+@given(operation=st.text(min_size=1))
+def test_audit_log_immutability(operation):
+    """Property: Audit log entries are immutable once written"""
+    logger = AuditLogger()
+
+    # Create audit entry
+    entry_id = logger.log_operation(operation_type=operation, user="test_user")
+
+    # Retrieve entry
+    entry1 = logger.get_entry(entry_id)
+
+    # Attempt to modify (should fail or create new entry)
+    with pytest.raises(ImmutabilityError):
+        logger.modify_entry(entry_id, operation_type="modified")
+
+    # Verify entry unchanged
+    entry2 = logger.get_entry(entry_id)
+    assert entry1 == entry2
 ```
 
 ### Running Tests
 
 ```bash
-# Python tests
-cd python
-pytest                          # All tests
-pytest -v                       # Verbose
-pytest --cov=vesper_compiler      # With coverage
-pytest -k test_contract        # Specific tests
-pytest -m integration          # Integration tests only
+# All tests
+pytest                                  # All tests
+pytest -v                               # Verbose
+pytest --cov=lacuna                     # With coverage
+pytest -k test_classification           # Specific tests
+pytest -m integration                   # Integration tests only
+pytest -m "not slow"                    # Skip slow tests
 
-# Rust tests
-cd rust
-cargo test                     # All tests
-cargo test --release           # Optimized build
-cargo test contract            # Tests matching "contract"
+# Policy tests
+opa test policies/                      # Test OPA policies
+opa test -v policies/                   # Verbose policy tests
+
+# Database migrations
+alembic upgrade head                    # Apply migrations
+alembic downgrade -1                    # Rollback one migration
+pytest tests/test_migrations.py         # Test migrations
 ```
 
 ### Test Organization
@@ -503,21 +569,32 @@ cargo test contract            # Tests matching "contract"
 ```
 tests/
 ├── unit/
-│   ├── test_compiler.py
-│   ├── test_validator.py
-│   └── test_executor.py
+│   ├── test_classification.py
+│   ├── test_lineage.py
+│   ├── test_policy_engine.py
+│   └── test_audit_logger.py
 ├── integration/
 │   ├── test_end_to_end.py
-│   └── test_cli.py
-├── differential/
-│   └── test_python_vs_rust.py
+│   ├── test_cli.py
+│   └── test_jupyter_integration.py
+├── lineage/
+│   ├── test_lineage_propagation.py
+│   └── test_tag_inheritance.py
 ├── property/
 │   └── test_invariants.py
+├── policies/
+│   ├── test_pii_policies.py
+│   └── test_export_policies.py
 └── fixtures/
-    ├── vesper_files/
-    │   ├── hello_world.vsp
-    │   └── payment_handler.vsp
-    └── expected_outputs/
+    ├── sample_data/
+    │   ├── customers.csv
+    │   ├── transactions.csv
+    │   └── public_data.csv
+    ├── policies/
+    │   ├── pii_export.rego
+    │   └── test_policies.rego
+    └── expected_classifications/
+        └── expected_results.json
 ```
 
 ## Documentation
@@ -525,19 +602,26 @@ tests/
 ### What to Document
 
 **Code changes:**
-- Update relevant .md files
+- Update relevant .md files in docs/
 - Add docstrings to new functions
 - Update API documentation
 
 **New features:**
-- Add to GETTING_STARTED.md
+- Add usage examples to README.md
 - Create example in examples/
-- Update ARCHITECTURE.md if needed
+- Update docs/ARCHITECTURE.md if needed
+- Document new policies in docs/POLICY_AS_CODE.md
 - Add to CHANGELOG.md
+
+**New integrations:**
+- Add to docs/INTEGRATIONS.md
+- Include setup instructions
+- Provide example configurations
 
 **Bug fixes:**
 - Note in commit message
 - Add regression test
+- Update known issues if applicable
 
 ### Documentation Style
 
@@ -550,38 +634,45 @@ tests/
 **Code comments:**
 ```python
 # Good: Explain WHY, not WHAT
-# Use Wilson score interval to account for sample size
-confidence = self._calculate_wilson_score(metrics)
+# Use three-layer pipeline to balance speed (<10ms for 98%) with accuracy
+classification = self._classify_with_fallback(operation, context)
 
 # Bad: State the obvious
-# Calculate confidence
-confidence = self._calculate_wilson_score(metrics)
+# Classify the operation
+classification = self._classify_with_fallback(operation, context)
 ```
 
 **Docstrings:**
 ```python
-def execute_node(node_id: str, inputs: Dict[str, Any]) -> Result:
+def classify_data_operation(
+    operation: DataOperation,
+    context: ClassificationContext
+) -> ClassificationResult:
     """
-    Execute a semantic node with given inputs.
-    
-    This function handles the dual-path execution model, routing
-    to either Python or direct runtime based on confidence scores.
-    
+    Classify a data operation using the three-layer pipeline.
+
+    This function uses heuristics, embeddings, and LLM reasoning
+    to determine data sensitivity tier and applicable tags.
+
     Args:
-        node_id: Unique identifier (e.g., 'payment_handler_v1')
-        inputs: Input parameters matching node's input schema
-        
+        operation: The data operation to classify (read, write, export, etc.)
+        context: Contextual information including user, lineage, and conversation
+
     Returns:
-        Result object containing either success output or error
-        
+        ClassificationResult with tier, tags, confidence, and reasoning
+
     Raises:
-        ValidationError: If inputs don't match schema
-        NodeNotFoundError: If node_id doesn't exist
-        
+        ValidationError: If operation data is invalid
+        ClassificationError: If classification pipeline fails
+
     Example:
-        >>> result = execute_node('hello_world_v1', {'name': 'Alice'})
-        >>> print(result.message)
-        Hello, Alice!
+        >>> operation = DataOperation(type="read", path="/data/customers.csv")
+        >>> context = ClassificationContext(user=current_user)
+        >>> result = classify_data_operation(operation, context)
+        >>> print(result.tier)
+        DataTier.PROPRIETARY
+        >>> print(result.tags)
+        ['PII', 'GDPR']
     """
 ```
 
@@ -590,27 +681,33 @@ def execute_node(node_id: str, inputs: Dict[str, Any]) -> Result:
 For significant architectural decisions, create an ADR:
 
 ```markdown
-# ADR-001: Use Wilson Score for Confidence Calculation
+# ADR-001: Three-Layer Classification Pipeline
 
 ## Status
 Accepted
 
 ## Context
-We need a statistical method to determine when direct runtime
-is reliable enough to handle production traffic.
+We need a classification system that is both fast and accurate,
+handling 90%+ of operations with <10ms latency while maintaining
+high accuracy for complex edge cases.
 
 ## Decision
-Use Wilson score confidence interval with 99.9% confidence level.
+Use a three-layer pipeline:
+1. Heuristics layer (regex, path analysis) - <1ms, 90% of operations
+2. Embeddings layer (semantic similarity) - <10ms, 8% of operations
+3. LLM reasoning layer (context-aware) - <200ms, 2% of operations
 
 ## Consequences
-- Conservative approach (slow migration)
-- Statistically rigorous
-- Requires minimum 10,000 samples
-- Well-understood in industry
+- Fast classification for common cases
+- Accurate handling of complex scenarios
+- Increased system complexity (three layers to maintain)
+- Requires embedding model deployment
+- LLM costs for 2% of operations
 
 ## Alternatives Considered
-- Simple accuracy percentage (rejected: no statistical rigor)
-- Bayesian confidence (rejected: too complex)
+- Pure LLM classification (rejected: too slow and expensive)
+- Pure heuristics (rejected: insufficient accuracy)
+- Two-layer system without embeddings (rejected: accuracy gap too large)
 ```
 
 Store in `docs/adr/`.
@@ -634,33 +731,41 @@ Use for:
 
 **Good issue example:**
 ```markdown
-Title: Add support for WebSocket operations in flow steps
+Title: Add Snowflake data sharing governance support
 
 **Description:**
-Currently we support HTTP requests but not WebSocket connections.
-Many real-time applications need WebSocket support.
+Currently Lacuna tracks lineage within a single system, but doesn't
+handle Snowflake data sharing scenarios where data is shared across
+different Snowflake accounts.
 
 **Proposed Solution:**
-Add a new operation type: `websocket_connection`
+Extend lineage tracking to capture cross-account data sharing:
+- Track when data is shared to external accounts
+- Maintain classification across account boundaries
+- Generate audit trail for shared data access
 
-**Example Vesper:**
-```yaml
-- step: connect_websocket
-  operation: websocket_connection
-  url: wss://example.com/stream
-  on_message:
-    handler: process_message
+**Example Use Case:**
+```python
+# Share data to partner account
+share_data(
+    data="customer_analytics",
+    target_account="partner_account",
+    classification=DataTier.INTERNAL,
+    allowed_operations=["read"]
+)
 ```
 
 **Impact:**
-- Changes to VESPER_SPEC.md
-- New operation in Python generator
-- New operation in Rust runtime
-- Tests needed
+- Changes to lineage tracking system
+- New Snowflake integration module
+- Policy engine updates for cross-account rules
+- Audit logging for data sharing events
+- Tests for cross-account scenarios
 
 **Questions:**
-- How to handle connection lifecycle?
-- Retry strategy for disconnections?
+- How to handle classification when external account has different policies?
+- Should we require manual approval for PROPRIETARY data sharing?
+- How to track data access in external accounts?
 ```
 
 ## Release Process
@@ -676,14 +781,15 @@ We use [Semantic Versioning](https://semver.org/):
 
 1. Update CHANGELOG.md
 2. Update version in:
-   - `python/setup.py`
-   - `rust/Cargo.toml`
-   - `package.json` (if applicable)
-3. Tag release: `git tag v0.2.0`
-4. Push tags: `git push --tags`
-5. Create GitHub release with notes
-6. Publish to PyPI (Python)
-7. Publish to crates.io (Rust)
+   - `setup.py` or `pyproject.toml`
+   - `lacuna/__init__.py`
+3. Run full test suite: `pytest`
+4. Test OPA policies: `opa test policies/`
+5. Tag release: `git tag v0.2.0`
+6. Push tags: `git push --tags`
+7. Create GitHub release with notes
+8. Publish to PyPI: `python -m build && twine upload dist/*`
+9. Update documentation site (if applicable)
 
 ## Recognition
 
@@ -695,10 +801,12 @@ Contributors are recognized in:
 
 ## Questions?
 
-- Check [GitHub Discussions](https://github.com/witlox/vesper/discussions)
+- Check [GitHub Discussions](https://github.com/witlox/lacuna/discussions)
+- Read the [documentation](docs/)
+- Join our community channels
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the Apache 2.0 License.
 
-Thank you for contributing to the future of software development!
+Thank you for contributing to self-service data governance and compliance!
