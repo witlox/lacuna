@@ -6,6 +6,7 @@ on:
     branches: [main]
     tags:
       - "v*"
+      - "[0-9]+.[0-9]+.[0-9]+"
   release:
     types: [published]
 
@@ -19,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -51,10 +54,41 @@ jobs:
           path: dist/
           retention-days: 30
 
+  publish-pypi:
+    needs: package
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: dist/
+
       - name: Publish to PyPI
-        if: github.event_name == 'release' && github.event.action == 'published'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-testpypi:
+    needs: package
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 
