@@ -4,7 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lacuna"
+<<<<<<< HEAD
 version = "2026.1.0"
+=======
+dynamic = ["version"]
+>>>>>>> f5e2e44 (version numbering and dependabot)
 description = "Privacy-aware query classification and routing for RAG systems - the protected space where your knowledge stays yours"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -158,6 +162,9 @@ Issues = "https://github.com/witlox/lacuna/issues"
 where = ["."]
 include = ["lacuna*"]
 exclude = ["tests*", "examples*", "docs*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lacuna.__version__.__version__"}
 
 [tool.black]
 line-length = 88
