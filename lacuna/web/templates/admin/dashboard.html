@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Lacuna{% endblock %}
+
+{% block nav_items %}
+<a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+<a href="/admin/users" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_users' %}bg-indigo-700{% endif %}">Users</a>
+<a href="/admin/audit" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_audit' %}bg-indigo-700{% endif %}">Audit</a>
+<a href="/admin/policies" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_policies' %}bg-indigo-700{% endif %}">Policies</a>
+<a href="/admin/config" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_config' %}bg-indigo-700{% endif %}">Config</a>
+<a href="/admin/alerts" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_alerts' %}bg-indigo-700{% endif %}">Alerts</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Admin Dashboard</h2>
+            <p class="mt-1 text-sm text-gray-500">System overview and health</p>
+        </div>
+        <div class="mt-4 flex md:ml-4 md:mt-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                ● System Healthy
+            </span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">📊</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Events</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ total_events }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">👥</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Unique Users</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ unique_users }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">⚠️</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Violations</dt>
+                            <dd class="text-lg font-semibold text-red-600">{{ violations }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">⚡</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Last Hour</dt>
+                            <dd class="text-lg font-semibold text-indigo-600">{{ recent_events }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Component Status -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Component Status</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Classification Engine</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Policy Engine</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.policy.enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.policy.enabled %}Active{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Audit Logging</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.audit.enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.audit.enabled %}Active{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Lineage Tracking</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.lineage.enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.lineage.enabled %}Active{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events by Type -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Events by Type</h3>
+            <div class="space-y-3">
+                {% for event_type, count in by_type.items() %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">{{ event_type }}</span>
+                    <div class="flex items-center">
+                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ (count / total_events * 100)|int }}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900 w-12 text-right">{{ count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Violations -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Recent Violations</h3>
+            <a href="/admin/audit?result=denied" class="text-sm text-indigo-600 hover:text-indigo-500">View all →</a>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for v in recent_violations %}
+            <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+                <div class="flex items-center space-x-4">
+                    <span class="text-red-500">⚠️</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ v.user_id }}</p>
+                        <p class="text-sm text-gray-500">{{ v.event_type.value }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">{{ v.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {{ v.action_result }}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <div class="px-6 py-8 text-center text-gray-500">
+                No recent violations.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-indigo-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-indigo-900 mb-4">Quick Actions</h3>
+        <div class="flex flex-wrap gap-4">
+            <a href="/admin/users" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                👥 Manage Users
+            </a>
+            <a href="/admin/config" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                ⚙️ Configuration
+            </a>
+            <a href="/admin/policies" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                📋 Policies
+            </a>
+            <a href="/docs" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                📖 API Docs
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

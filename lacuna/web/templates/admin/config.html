@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - Admin - Lacuna{% endblock %}
+
+{% block nav_items %}
+<a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+<a href="/admin/users" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_users' %}bg-indigo-700{% endif %}">Users</a>
+<a href="/admin/audit" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_audit' %}bg-indigo-700{% endif %}">Audit</a>
+<a href="/admin/policies" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_policies' %}bg-indigo-700{% endif %}">Policies</a>
+<a href="/admin/config" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_config' %}bg-indigo-700{% endif %}">Config</a>
+<a href="/admin/alerts" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_alerts' %}bg-indigo-700{% endif %}">Alerts</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Configuration</h2>
+            <p class="mt-1 text-sm text-gray-500">Manage system settings and proprietary terms</p>
+        </div>
+    </div>
+
+    {% if request.query_params.get('updated') %}
+    <div class="bg-green-50 border-l-4 border-green-400 p-4">
+        <div class="flex">
+            <span class="text-green-500">✓</span>
+            <p class="ml-3 text-sm text-green-700">Configuration updated successfully. Restart may be required.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- General Settings -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">General Settings</h3>
+            <form action="/admin/config/update" method="post" class="space-y-4">
+                <div>
+                    <label for="env" class="block text-sm font-medium text-gray-700">Environment</label>
+                    <input type="text" name="key" value="environment" hidden>
+                    <select name="value" id="env" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="development" {% if settings.environment == 'development' %}selected{% endif %}>Development</option>
+                        <option value="staging" {% if settings.environment == 'staging' %}selected{% endif %}>Staging</option>
+                        <option value="production" {% if settings.environment == 'production' %}selected{% endif %}>Production</option>
+                    </select>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Update</button>
+            </form>
+        </div>
+
+        <!-- Classification Settings -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Classification</h3>
+            <form action="/admin/config/update" method="post" class="space-y-4">
+                <div>
+                    <label for="strategy" class="block text-sm font-medium text-gray-700">Strategy</label>
+                    <input type="text" name="key" value="classification.strategy" hidden>
+                    <select name="value" id="strategy" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="conservative" {% if settings.classification.strategy == 'conservative' %}selected{% endif %}>Conservative (safest)</option>
+                        <option value="balanced" {% if settings.classification.strategy == 'balanced' %}selected{% endif %}>Balanced</option>
+                        <option value="aggressive" {% if settings.classification.strategy == 'aggressive' %}selected{% endif %}>Aggressive (fastest)</option>
+                    </select>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Update</button>
+            </form>
+
+            <div class="mt-6 pt-6 border-t border-gray-200 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Heuristic Classifier</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.classification.heuristic_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.classification.heuristic_enabled %}Enabled{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Embedding Classifier</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.classification.embedding_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.classification.embedding_enabled %}Enabled{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">LLM Classifier</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.classification.llm_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if settings.classification.llm_enabled %}Enabled{% else %}Disabled{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proprietary Terms -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Proprietary Terms</h3>
+            
+            <div class="mb-4">
+                <ul class="flex flex-wrap gap-2">
+                    {% for term in terms_data.terms %}
+                    <li class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100">
+                        {{ term }}
+                        <form action="/admin/terms/remove" method="post" class="ml-2 inline">
+                            <input type="hidden" name="category" value="terms">
+                            <input type="hidden" name="value" value="{{ term }}">
+                            <button type="submit" class="text-gray-500 hover:text-red-500">&times;</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="text-sm text-gray-500">No terms defined</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form action="/admin/terms/add" method="post" class="flex gap-2">
+                <input type="hidden" name="category" value="terms">
+                <input type="text" name="value" placeholder="Add term..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Add</button>
+            </form>
+        </div>
+
+        <!-- Proprietary Projects -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Proprietary Projects</h3>
+            
+            <div class="mb-4">
+                <ul class="flex flex-wrap gap-2">
+                    {% for project in terms_data.projects %}
+                    <li class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100">
+                        {{ project }}
+                        <form action="/admin/terms/remove" method="post" class="ml-2 inline">
+                            <input type="hidden" name="category" value="projects">
+                            <input type="hidden" name="value" value="{{ project }}">
+                            <button type="submit" class="text-gray-500 hover:text-red-500">&times;</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="text-sm text-gray-500">No projects defined</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form action="/admin/terms/add" method="post" class="flex gap-2">
+                <input type="hidden" name="category" value="projects">
+                <input type="text" name="value" placeholder="Add project..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Add</button>
+            </form>
+        </div>
+
+        <!-- Proprietary Customers -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Proprietary Customers</h3>
+            
+            <div class="mb-4">
+                <ul class="flex flex-wrap gap-2">
+                    {% for customer in terms_data.customers %}
+                    <li class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100">
+                        {{ customer }}
+                        <form action="/admin/terms/remove" method="post" class="ml-2 inline">
+                            <input type="hidden" name="category" value="customers">
+                            <input type="hidden" name="value" value="{{ customer }}">
+                            <button type="submit" class="text-gray-500 hover:text-red-500">&times;</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="text-sm text-gray-500">No customers defined</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form action="/admin/terms/add" method="post" class="flex gap-2">
+                <input type="hidden" name="category" value="customers">
+                <input type="text" name="value" placeholder="Add customer..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Add</button>
+            </form>
+        </div>
+
+        <!-- Policy Engine -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Policy Engine</h3>
+            
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm text-gray-600">Status</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if settings.policy.enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {% if settings.policy.enabled %}Enabled{% else %}Disabled{% endif %}
+                </span>
+            </div>
+
+            <form action="/admin/config/update" method="post" class="space-y-4">
+                <input type="hidden" name="key" value="policy.enabled">
+                <div class="flex gap-2">
+                    <button type="submit" name="value" value="true" class="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">Enable</button>
+                    <button type="submit" name="value" value="false" class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700">Disable</button>
+                </div>
+            </form>
+
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-sm text-gray-500">OPA Endpoint: {{ settings.policy.opa_endpoint or 'Not configured' }}</p>
+                <p class="text-sm text-gray-500">Policy Path: {{ settings.policy.opa_policy_path }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

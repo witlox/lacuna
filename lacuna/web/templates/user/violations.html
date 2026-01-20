@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Violations - Lacuna{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Policy Violations</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ total_violations }} total violations</p>
+        </div>
+    </div>
+
+    <!-- Recommendations Banner -->
+    {% if recommendations %}
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="text-2xl">💡</span>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Recommendations Available</h3>
+                <p class="mt-1 text-sm text-blue-700">
+                    We have {{ recommendations|length }} personalized recommendations based on your activity.
+                    <a href="/user/recommendations" class="font-medium underline">View recommendations →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Violations by Type -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">By Type</h3>
+            <div class="space-y-4">
+                {% for event_type, violations_list in by_type.items() %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">{{ event_type }}</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {{ violations_list|length }}
+                    </span>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <span class="text-4xl">🎉</span>
+                    <p class="mt-2 text-sm text-gray-500">No violations!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Violations List -->
+        <div class="lg:col-span-2 bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Violation Details</h3>
+            </div>
+            <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                {% for v in violations %}
+                <div class="px-6 py-4">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                                <span class="text-red-600">⚠️</span>
+                            </span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">{{ v.event_type.value }}</p>
+                            <p class="text-sm text-gray-500">{{ v.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            {% if v.resource_id %}
+                            <p class="text-sm text-gray-400">Resource: {{ v.resource_id }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ v.action_result }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="px-6 py-8 text-center">
+                    <span class="text-4xl">✅</span>
+                    <p class="mt-2 text-gray-500">No policy violations. Excellent!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Understanding Violations -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Understanding Policy Violations</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+                <h4 class="text-sm font-medium text-gray-900">🔴 DATA_EXPORT Violations</h4>
+                <p class="text-sm text-gray-500">
+                    Occur when attempting to export data that exceeds your authorization level
+                    or violates data handling policies.
+                </p>
+            </div>
+            <div class="space-y-2">
+                <h4 class="text-sm font-medium text-gray-900">🔐 DATA_ACCESS Violations</h4>
+                <p class="text-sm text-gray-500">
+                    Occur when trying to access data without proper permissions or outside
+                    approved contexts.
+                </p>
+            </div>
+            <div class="space-y-2">
+                <h4 class="text-sm font-medium text-gray-900">📊 CLASSIFICATION Issues</h4>
+                <p class="text-sm text-gray-500">
+                    Indicate that data classification could not be determined or conflicts
+                    with expected patterns.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

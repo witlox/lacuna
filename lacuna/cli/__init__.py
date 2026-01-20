@@ -9,6 +9,7 @@ import click
 import structlog
 
 from lacuna.__version__ import __version__
+from lacuna.cli.admin import admin as admin_commands
 
 # Configure structlog for CLI
 structlog.configure(
@@ -427,6 +428,10 @@ def config() -> None:
     click.echo(f"\nPolicy Engine: {settings.policy.enabled}")
     click.echo(f"Audit Logging: {settings.audit.enabled}")
     click.echo(f"Lineage Tracking: {settings.lineage.enabled}")
+
+
+# Register admin commands
+cli.add_command(admin_commands, name="admin")
 
 
 @cli.command()

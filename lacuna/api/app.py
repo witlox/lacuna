@@ -75,6 +75,13 @@ def create_app() -> FastAPI:
     app.include_router(lineage.router, prefix="/api/v1", tags=["Lineage"])
     app.include_router(audit.router, prefix="/api/v1", tags=["Audit"])
 
+    # Register web routes (user and admin dashboards)
+    from lacuna.web.routes import admin as admin_web
+    from lacuna.web.routes import user as user_web
+
+    app.include_router(user_web.router)
+    app.include_router(admin_web.router)
+
     return app
 
 

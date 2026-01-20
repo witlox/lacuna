@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations - Lacuna{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Personalized Recommendations</h2>
+            <p class="mt-1 text-sm text-gray-500">Based on {{ violation_count }} analyzed events</p>
+        </div>
+    </div>
+
+    <!-- Recommendations List -->
+    <div class="space-y-4">
+        {% for rec in recommendations %}
+        <div class="bg-white shadow rounded-lg p-6 {% if rec.type == 'success' %}border-l-4 border-green-500{% elif rec.type == 'warning' %}border-l-4 border-yellow-500{% elif rec.type == 'info' %}border-l-4 border-blue-500{% else %}border-l-4 border-gray-300{% endif %}">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 text-3xl">
+                    {{ rec.icon }}
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-medium text-gray-900">{{ rec.title }}</h3>
+                    <p class="mt-2 text-sm text-gray-600">{{ rec.message }}</p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white shadow rounded-lg p-8 text-center">
+            <span class="text-4xl">🤔</span>
+            <p class="mt-4 text-gray-500">No recommendations available yet. Keep using Lacuna!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Best Practices -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">📚 Data Governance Best Practices</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-green-500">✓</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Check before you share</p>
+                        <p class="text-sm text-gray-500">Use <code class="bg-gray-100 px-1 rounded">lacuna evaluate</code> before exporting data</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-green-500">✓</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Understand classification tiers</p>
+                        <p class="text-sm text-gray-500">PROPRIETARY → INTERNAL → PUBLIC (most to least restricted)</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-green-500">✓</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Document your purpose</p>
+                        <p class="text-sm text-gray-500">Always provide business justification for data access</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-red-500">✗</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Don't bypass controls</p>
+                        <p class="text-sm text-gray-500">Policy controls exist to protect the organization</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-red-500">✗</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Don't share credentials</p>
+                        <p class="text-sm text-gray-500">Each user should have their own access credentials</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <span class="flex-shrink-0 text-red-500">✗</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Don't ignore warnings</p>
+                        <p class="text-sm text-gray-500">Classification warnings indicate potential issues</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-indigo-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-indigo-900 mb-4">🚀 Quick Actions</h3>
+        <div class="flex flex-wrap gap-4">
+            <a href="/docs" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                📖 View API Documentation
+            </a>
+            <a href="/user/history" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                📋 View Full History
+            </a>
+            <a href="/user/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                📊 Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Policies - Admin - Lacuna{% endblock %}
+
+{% block nav_items %}
+<a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+<a href="/admin/users" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_users' %}bg-indigo-700{% endif %}">Users</a>
+<a href="/admin/audit" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_audit' %}bg-indigo-700{% endif %}">Audit</a>
+<a href="/admin/policies" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_policies' %}bg-indigo-700{% endif %}">Policies</a>
+<a href="/admin/config" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_config' %}bg-indigo-700{% endif %}">Config</a>
+<a href="/admin/alerts" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_alerts' %}bg-indigo-700{% endif %}">Alerts</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Policy Management</h2>
+            <p class="mt-1 text-sm text-gray-500">OPA Rego policies for data governance</p>
+        </div>
+    </div>
+
+    <!-- Policy Engine Status -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900">Policy Engine</h3>
+                <p class="text-sm text-gray-500">{{ settings.policy.opa_endpoint or 'Local evaluation' }}</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if settings.policy.enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                {% if settings.policy.enabled %}● Active{% else %}○ Disabled{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Policy Files -->
+    <div class="space-y-4">
+        {% for policy in policy_files %}
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">📋 {{ policy.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ policy.path }} · {{ policy.size }} bytes · Modified {{ policy.modified.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                <pre class="bg-gray-50 rounded-lg p-4 text-sm text-gray-800 overflow-x-auto"><code>{{ policy.content }}</code></pre>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white shadow rounded-lg p-8 text-center">
+            <span class="text-4xl">📋</span>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No Policy Files</h3>
+            <p class="mt-2 text-sm text-gray-500">Create .rego files in the policies/ directory to define governance rules.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Policy Documentation -->
+    <div class="bg-indigo-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-indigo-900 mb-4">📚 Policy Language (Rego)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="text-sm font-medium text-indigo-900 mb-2">Basic Structure</h4>
+                <pre class="bg-white rounded-lg p-3 text-xs text-gray-800"><code>package lacuna.classification
+
+default allow = false
+
+allow {
+    input.tier == "PUBLIC"
+}
+
+allow {
+    input.tier == "INTERNAL"
+    input.user.role == "employee"
+}</code></pre>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-indigo-900 mb-2">Input Context</h4>
+                <ul class="text-sm text-indigo-700 space-y-1">
+                    <li>• <code>input.tier</code> - Data classification tier</li>
+                    <li>• <code>input.user.id</code> - User identifier</li>
+                    <li>• <code>input.user.role</code> - User role</li>
+                    <li>• <code>input.action</code> - Requested action</li>
+                    <li>• <code>input.resource</code> - Resource being accessed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

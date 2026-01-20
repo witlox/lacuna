@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lacuna{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX for interactivity -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center">
+                        <span class="text-2xl font-bold">🔒 Lacuna</span>
+                    </a>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            {% block nav_items %}
+                            <a href="/user/dashboard" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'user_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+                            <a href="/user/history" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'user_history' %}bg-indigo-700{% endif %}">History</a>
+                            <a href="/user/violations" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'user_violations' %}bg-indigo-700{% endif %}">Violations</a>
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    {% if is_admin %}
+                    <a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium bg-yellow-500 text-yellow-900 hover:bg-yellow-400">Admin</a>
+                    {% endif %}
+                    <span class="ml-4 text-sm">{{ current_user or 'Guest' }}</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>Lacuna - Privacy-aware data governance</p>
+            <p class="mt-1">
+                <a href="/docs" class="hover:text-white">API Docs</a> · 
+                <a href="/redoc" class="hover:text-white">ReDoc</a> · 
+                <a href="/openapi.json" class="hover:text-white">OpenAPI</a>
+            </p>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

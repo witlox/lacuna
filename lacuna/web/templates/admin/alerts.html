@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts - Admin - Lacuna{% endblock %}
+
+{% block nav_items %}
+<a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+<a href="/admin/users" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_users' %}bg-indigo-700{% endif %}">Users</a>
+<a href="/admin/audit" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_audit' %}bg-indigo-700{% endif %}">Audit</a>
+<a href="/admin/policies" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_policies' %}bg-indigo-700{% endif %}">Policies</a>
+<a href="/admin/config" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_config' %}bg-indigo-700{% endif %}">Config</a>
+<a href="/admin/alerts" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_alerts' %}bg-indigo-700{% endif %}">Alerts</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">Security Alerts</h2>
+            <p class="mt-1 text-sm text-gray-500">Policy violations and security events</p>
+        </div>
+        <div>
+            <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Statistics -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div class="bg-red-50 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">🚨</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-red-600 truncate">Total Alerts</dt>
+                            <dd class="text-lg font-semibold text-red-900">{{ alerts|length }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">⚠️</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-yellow-600 truncate">Denied</dt>
+                            <dd class="text-lg font-semibold text-yellow-900">{{ alerts|selectattr('action_result', 'equalto', 'denied')|list|length }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-orange-50 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl">🛑</span>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-orange-600 truncate">Blocked</dt>
+                            <dd class="text-lg font-semibold text-orange-900">{{ alerts|selectattr('action_result', 'equalto', 'blocked')|list|length }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Recent Alerts</h3>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for alert in alerts %}
+            <div class="px-6 py-4 hover:bg-gray-50">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        {% if alert.action_result == 'denied' %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-yellow-100">
+                            <span class="text-yellow-600">⚠️</span>
+                        </span>
+                        {% elif alert.action_result == 'blocked' %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                            <span class="text-red-600">🛑</span>
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-100">
+                            <span class="text-gray-600">❌</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-gray-900">{{ alert.event_type.value }}</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ alert.action_result }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500">User: {{ alert.user_id }}</p>
+                        {% if alert.resource_id %}
+                        <p class="text-sm text-gray-400">Resource: {{ alert.resource_id }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-400 mt-1">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                    <div>
+                        <a href="/admin/audit?user_id={{ alert.user_id }}" class="text-sm text-indigo-600 hover:text-indigo-500">
+                            View User →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <span class="text-4xl">✅</span>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No Alerts</h3>
+                <p class="mt-2 text-sm text-gray-500">All systems are operating normally.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Auto-refresh notice -->
+    <div class="text-center text-sm text-gray-500">
+        <p>This page shows the most recent security events. Refresh to update.</p>
+    </div>
+</div>
+{% endblock %}
