@@ -134,7 +134,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev"], catch_exceptions=False)
+            runner.invoke(cli, ["dev"], catch_exceptions=False)
 
             # Check environment was set correctly
             assert os.environ.get("LACUNA_ENVIRONMENT") == "development"
@@ -154,7 +154,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev", "--port", "8080"], catch_exceptions=False)
+            runner.invoke(cli, ["dev", "--port", "8080"], catch_exceptions=False)
 
             mock_uvicorn.assert_called_once()
             call_kwargs = mock_uvicorn.call_args[1]
@@ -171,7 +171,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev"], catch_exceptions=False)
+            runner.invoke(cli, ["dev"], catch_exceptions=False)
 
             # Data directory should be created
             assert os.path.exists("data")
@@ -185,7 +185,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev"], catch_exceptions=False)
+            runner.invoke(cli, ["dev"], catch_exceptions=False)
 
             mock_init_db.assert_called_once()
 
@@ -198,7 +198,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev"], catch_exceptions=False)
+            runner.invoke(cli, ["dev"], catch_exceptions=False)
 
             call_kwargs = mock_uvicorn.call_args[1]
             assert call_kwargs["host"] == "127.0.0.1"
@@ -212,7 +212,7 @@ class TestDevCommand:
         runner = CliRunner()
 
         with runner.isolated_filesystem():
-            result = runner.invoke(cli, ["dev", "--no-reload"], catch_exceptions=False)
+            runner.invoke(cli, ["dev", "--no-reload"], catch_exceptions=False)
 
             call_kwargs = mock_uvicorn.call_args[1]
             assert call_kwargs["reload"] is False
