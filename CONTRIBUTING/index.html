@@ -1676,34 +1676,6 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#release-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Release Process
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Release Process">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#versioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Versioning
-      
-    </span>
-  </a>
-  
-</li>
-        
           <li class="md-nav__item">
   <a href="#release-checklist" class="md-nav__link">
     <span class="md-ellipsis">
@@ -2334,34 +2306,6 @@
     <span class="md-ellipsis">
       
         GitHub Issues
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#release-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Release Process
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Release Process">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#versioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Versioning
       
     </span>
   </a>
@@ -3079,25 +3023,31 @@
 - How to handle classification when external account has different policies?
 - Should we require manual approval for PROPRIETARY data sharing?
 - How to track data access in external accounts?
-```</p>
-<h2 id="release-process">Release Process<a class="headerlink" href="#release-process" title="Permanent link">&para;</a></h2>
-<h3 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">&para;</a></h3>
-<p>We use <a href="https://semver.org/">Semantic Versioning</a>:
-- MAJOR: Breaking changes
-- MINOR: New features (backward compatible)
-- PATCH: Bug fixes</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>## Release Process
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>### Versioning
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>We use a date-based versioning scheme: **year.major.buildnumber**
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>- YEAR: Current year (e.g., 2026)
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>- MAJOR: Major version increment within the year (set in `lacuna/__version__.py`)
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>- BUILDNUMBER: Incremental build number (automatically generated from git commit count)
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>**Version is automatically generated** from git history. To increment the major version, update the `major` variable in `lacuna/__version__.py`.
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>
+</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>For building packages locally with proper version:
+</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>```bash
+</span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a>LACUNA_BUILD=1 python -m build
+</span></code></pre></div></p>
 <h3 id="release-checklist">Release Checklist<a class="headerlink" href="#release-checklist" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Update CHANGELOG.md</li>
-<li>Update version in:</li>
-<li><code>setup.py</code> or <code>pyproject.toml</code></li>
-<li><code>lacuna/__init__.py</code></li>
+<li>Update major version if needed (in <code>lacuna/__version__.py</code>)</li>
 <li>Run full test suite: <code>pytest</code></li>
 <li>Test OPA policies: <code>opa test policies/</code></li>
-<li>Tag release: <code>git tag v0.2.0</code></li>
+<li>Tag release: <code>git tag v2026.1.100</code></li>
 <li>Push tags: <code>git push --tags</code></li>
 <li>Create GitHub release with notes</li>
-<li>Publish to PyPI: <code>python -m build &amp;&amp; twine upload dist/*</code></li>
+<li>Publish to PyPI: <code>LACUNA_BUILD=1 python -m build &amp;&amp; twine upload dist/*</code></li>
 <li>Update documentation site (if applicable)</li>
 </ol>
 <h2 id="recognition">Recognition<a class="headerlink" href="#recognition" title="Permanent link">&para;</a></h2>
