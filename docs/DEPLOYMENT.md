@@ -4,6 +4,8 @@
 
 Deploy Lacuna in production with Docker, Kubernetes, and Helm for enterprise-scale privacy-aware RAG.
 
+> **For local development**, see [DEVELOPMENT.md](DEVELOPMENT.md) for the lightweight dev mode that requires no external dependencies.
+
 ---
 
 ## Deployment Options

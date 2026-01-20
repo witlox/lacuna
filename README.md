@@ -255,9 +255,49 @@ Lacuna classifies all data into three tiers:
 - **Asynchronous audit logging** (non-blocking)
 - **Batch processing** for bulk operations
 
+## Quick Start
+
+### Development Mode
+
+The fastest way to try Lacuna locally:
+
+```bash
+# Clone and install
+git clone https://github.com/witlox/lacuna.git
+cd lacuna
+pip install -e .
+
+# Start in dev mode (uses SQLite, no external dependencies)
+lacuna dev
+
+# Open in browser
+# API Docs: http://127.0.0.1:8000/docs
+# User Dashboard: http://127.0.0.1:8000/user/dashboard
+# Admin Dashboard: http://127.0.0.1:8000/admin/
+```
+
+Dev mode uses lightweight backends (SQLite, in-memory cache) so you can explore Lacuna without setting up PostgreSQL, Redis, or OPA.
+
+### Production Mode
+
+For production deployments with full features:
+
+```bash
+# Using Docker
+docker pull ghcr.io/witlox/lacuna:latest
+docker run -d -p 8000:8000 ghcr.io/witlox/lacuna:latest
+
+# Or install via pip
+pip install lacuna
+lacuna serve --host 0.0.0.0 --port 8000
+```
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker Compose, Kubernetes, and Helm deployments.
+
 ## Documentation
 
 - **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and data flow
+- **[Development Guide](docs/DEVELOPMENT.md)** - Local setup and dev mode
 - **[Data Governance Guide](docs/DATA_GOVERNANCE.md)** - Self-service governance model
 - **[Lineage & Provenance](docs/LINEAGE.md)** - Tracking data flows
 - **[ISO 27001 Audit Logging](docs/AUDIT_LOGGING.md)** - Compliance implementation

@@ -84,8 +84,8 @@ We pledge to make participation in this project a harassment-free experience for
 ### Prerequisites
 
 - Python 3.10+
-- PostgreSQL 14+
 - Git
+- Optional: PostgreSQL 14+ (for production mode)
 - Optional: Docker (for containerized deployment)
 
 ### Clone Repository
@@ -99,39 +99,49 @@ cd lacuna
 
 ```bash
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
 
 # Run tests
 pytest
 ```
 
-### Database Setup
+### Quick Start with Dev Mode
+
+The fastest way to run Lacuna locally is dev mode, which uses SQLite and in-memory backends:
 
 ```bash
-# Create database
+# Start in dev mode (no external dependencies required)
+lacuna dev
+
+# Open in browser
+# API Docs: http://127.0.0.1:8000/docs
+# User Dashboard: http://127.0.0.1:8000/user/dashboard
+# Admin Dashboard: http://127.0.0.1:8000/admin/
+```
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed development setup.
+
+### Full Production Setup (Optional)
+
+For testing with production-like services:
+
+```bash
+# Database Setup
 createdb lacuna_dev
 
 # Run migrations
 alembic upgrade head
-```
 
-### OPA (Open Policy Agent) Setup
-
-```bash
-# Install OPA (macOS)
-brew install opa
-
+# OPA (Open Policy Agent) Setup
+brew install opa  # macOS
 # Or download from https://www.openpolicyagent.org/docs/latest/#running-opa
 
-# Verify installation
-opa version
+# Start with full services
+lacuna serve --reload
 ```
 
 ### Verify Installation
@@ -142,9 +152,6 @@ lacuna --version
 
 # Run example classification
 lacuna classify --file examples/sample_data.csv
-
-# Start development server
-lacuna server --dev
 ```
 
 ## How to Contribute
