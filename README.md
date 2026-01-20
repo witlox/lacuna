@@ -307,6 +307,7 @@ helm install lacuna ./deploy/helm/lacuna -f deploy/helm/lacuna/values-production
 
 ## Documentation
 
+- **[User Guide](docs/USER_GUIDE.md)** - Using the web UI and CLI
 - **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and data flow
 - **[Development Guide](docs/DEVELOPMENT.md)** - Local setup and dev mode
 - **[Data Governance Guide](docs/DATA_GOVERNANCE.md)** - Self-service governance model
@@ -315,7 +316,7 @@ helm install lacuna ./deploy/helm/lacuna -f deploy/helm/lacuna/values-production
 - **[Policy-as-Code](docs/POLICY_AS_CODE.md)** - Writing OPA policies
 - **[Integration Guide](docs/INTEGRATIONS.md)** - dbt, Databricks, Snowflake
 - **[Plugin Development](docs/PLUGINS.md)** - Extending Lacuna
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production setup
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production setup and authentication
 
 ## Examples
 
