@@ -6,6 +6,11 @@ on:
     tags:
       - "v*"
       - "[0-9]+.[0-9]+.[0-9]+"
+    paths-ignore:
+      - 'docs/**'
+      - 'examples/**'
+      - '**.md'
+      - 'LICENSE'
   release:
     types: [published]
 
