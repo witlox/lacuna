@@ -1,3 +1,3 @@
 """Version information for Lacuna."""
 
-__version__ = "0.1.0"
+__version__ = "2026.1.0"
