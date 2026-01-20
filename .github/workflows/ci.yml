@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Step 1: Build
+  build:
+    uses: ./.github/workflows/build.yml
+
+  # Step 2: Validate (after build)
+  validate:
+    needs: build
+    uses: ./.github/workflows/validate.yml
+
+  # Step 3: Test (after validate)
+  test:
+    needs: validate
+    uses: ./.github/workflows/test.yml

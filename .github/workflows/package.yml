@@ -1,7 +1,6 @@
 name: Package
 
 on:
-  workflow_call:
   push:
     branches: [main]
     tags:
@@ -11,11 +10,21 @@ on:
     types: [published]
 
 jobs:
+  # Run full CI pipeline first
+  build:
+    uses: ./.github/workflows/build.yml
+
   validate:
+    needs: build
     uses: ./.github/workflows/validate.yml
 
-  package:
+  test:
     needs: validate
+    uses: ./.github/workflows/test.yml
+
+  # Package only after all checks pass
+  package:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:

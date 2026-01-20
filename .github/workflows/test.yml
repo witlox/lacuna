@@ -2,17 +2,9 @@ name: Test
 
 on:
   workflow_call:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-
   test:
-    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:

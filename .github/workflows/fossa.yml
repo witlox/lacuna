@@ -7,7 +7,21 @@ on:
     branches: [main, develop]
 
 jobs:
+  # Run full CI pipeline first
+  build:
+    uses: ./.github/workflows/build.yml
+
+  validate:
+    needs: build
+    uses: ./.github/workflows/validate.yml
+
+  test:
+    needs: validate
+    uses: ./.github/workflows/test.yml
+
+  # FOSSA scan only after all checks pass
   fossa-scan:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:

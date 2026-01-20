@@ -14,11 +14,21 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Run full CI pipeline first
   build:
     uses: ./.github/workflows/build.yml
 
-  container:
+  validate:
     needs: build
+    uses: ./.github/workflows/validate.yml
+
+  test:
+    needs: validate
+    uses: ./.github/workflows/test.yml
+
+  # Container build only after all checks pass
+  container:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

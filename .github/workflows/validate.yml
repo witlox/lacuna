@@ -2,17 +2,9 @@ name: Validate
 
 on:
   workflow_call:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml
-
   validate:
-    needs: test
     runs-on: ubuntu-latest
 
     steps:
