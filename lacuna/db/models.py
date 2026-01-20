@@ -13,8 +13,9 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    TypeDecorator,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, INET, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import relationship
 
 from lacuna.db.base import Base
@@ -23,6 +24,31 @@ from lacuna.db.base import Base
 def _utc_now() -> datetime:
     """Get current UTC time in a timezone-aware manner."""
     return datetime.now(timezone.utc)
+
+
+class StringList(TypeDecorator):  # type: ignore[type-arg]
+    """Type that works as ARRAY on PostgreSQL and JSON on SQLite."""
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):  # type: ignore[no-untyped-def]
+        """Load dialect-specific implementation."""
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(ARRAY(String))
+        return dialect.type_descriptor(JSON())
+
+    def process_bind_param(self, value, dialect):  # type: ignore[no-untyped-def]
+        """Process value when binding to parameter."""
+        if value is None:
+            return []
+        return list(value)
+
+    def process_result_value(self, value, dialect):  # type: ignore[no-untyped-def]
+        """Process value when reading from result."""
+        if value is None:
+            return []
+        return list(value)
 
 
 class ClassificationModel(Base):
@@ -37,8 +63,8 @@ class ClassificationModel(Base):
     tier = Column(String(20), nullable=False, index=True)
     confidence = Column(Float, nullable=False)
     reasoning = Column(Text, nullable=False)
-    matched_rules: Column[list[str]] = Column(ARRAY(String), default=list)
-    tags: Column[list[str]] = Column(ARRAY(String), default=list, index=True)
+    matched_rules: Column[list[str]] = Column(StringList(), default=list)
+    tags: Column[list[str]] = Column(StringList(), default=list, index=True)
 
     # Classifier information
     classifier_name = Column(String(100), nullable=False)
@@ -53,10 +79,7 @@ class ClassificationModel(Base):
     # Relationships
     parent = relationship("ClassificationModel", remote_side=[id])
 
-    __table_args__ = (
-        Index("idx_classification_tier_timestamp", "tier", "timestamp"),
-        Index("idx_classification_tags", "tags", postgresql_using="gin"),
-    )
+    __table_args__ = (Index("idx_classification_tier_timestamp", "tier", "timestamp"),)
 
 
 class LineageEdgeModel(Base):
@@ -120,7 +143,7 @@ class AuditLogModel(Base):
     # Actor identification
     user_id = Column(String(255), nullable=False, index=True)
     user_session_id = Column(String(255))
-    user_ip_address = Column(INET)
+    user_ip_address = Column(String(45))  # IPv4/IPv6 compatible
     user_role = Column(String(100))
     user_department = Column(String(100))
 
@@ -128,7 +151,7 @@ class AuditLogModel(Base):
     resource_type = Column(String(50), nullable=False)
     resource_id = Column(String(500), nullable=False, index=True)
     resource_classification = Column(String(20), index=True)
-    resource_tags: Column[list[str]] = Column(ARRAY(String), default=list)
+    resource_tags: Column[list[str]] = Column(StringList(), default=list)
 
     # Action details
     action = Column(String(100), nullable=False)
@@ -144,10 +167,10 @@ class AuditLogModel(Base):
 
     # Lineage/Provenance
     parent_event_id = Column(UUID(as_uuid=True), ForeignKey("audit_log.event_id"))
-    lineage_chain: Column[list[str]] = Column(ARRAY(String), default=list)
+    lineage_chain: Column[list[str]] = Column(StringList(), default=list)
 
     # Compliance metadata
-    compliance_flags: Column[list[str]] = Column(ARRAY(String), default=list)
+    compliance_flags: Column[list[str]] = Column(StringList(), default=list)
     retention_period_days = Column(Integer, default=2555)
 
     # Tamper detection (hash chain)
@@ -169,7 +192,6 @@ class AuditLogModel(Base):
         Index(
             "idx_audit_classification_timestamp", "resource_classification", "timestamp"
         ),
-        Index("idx_audit_tags", "resource_tags", postgresql_using="gin"),
         Index("idx_audit_event_type", "event_type", "timestamp"),
         Index("idx_audit_action_result", "action_result", "timestamp"),
     )
