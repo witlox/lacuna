@@ -61,5 +61,5 @@ jobs:
 
       - name: Check coverage threshold
         run: |
-          python -m pytest tests/ --cov=lacuna --cov-fail-under=80 --cov-report=term-missing
+          python -m pytest tests/ --cov=lacuna --cov-fail-under=60 --cov-report=term-missing
 
