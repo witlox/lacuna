@@ -1455,7 +1455,6 @@ is_admin: True
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
 - [LINEAGE.md](LINEAGE.md) - Audit and compliance
 - [POLICY_AS_CODE.md](POLICY_AS_CODE.md) - OPA configuration
-- [examples/kubernetes/](../examples/kubernetes/) - K8s manifests
 
 ---
 

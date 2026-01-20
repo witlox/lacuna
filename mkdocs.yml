@@ -1,0 +1,109 @@
+site_name: Lacuna
+site_description: Privacy-aware data governance and lineage tracking engine for RAG systems and enterprise data platforms
+site_author: Lacuna Contributors
+site_url: https://witlox.github.io/lacuna
+repo_url: https://github.com/witlox/lacuna
+repo_name: witlox/lacuna
+copyright: Copyright &copy; 2025 Lacuna Contributors
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - social
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quick-start.md
+    - Installation: getting-started/installation.md
+    - User Guide: USER_GUIDE.md
+  - Core Concepts:
+    - Architecture: ARCHITECTURE.md
+    - Data Governance: DATA_GOVERNANCE.md
+    - Lineage & Provenance: LINEAGE.md
+    - Audit Logging: AUDIT_LOGGING.md
+    - Policy as Code: POLICY_AS_CODE.md
+  - Guides:
+    - Development: DEVELOPMENT.md
+    - Deployment: DEPLOYMENT.md
+    - Integrations: INTEGRATIONS.md
+    - Plugin Development: PLUGINS.md
+  - API Reference:
+    - REST API: api/rest.md
+    - Python SDK: api/python.md
+  - Community:
+    - Contributing: ../CONTRIBUTING.md
+    - Security: ../SECURITY.md
+    - License: license.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/witlox/lacuna
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/lacuna/
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  version:
+    provider: mike
