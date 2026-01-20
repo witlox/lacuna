@@ -1,66 +1,34 @@
 # FOSSA Configuration for Lacuna
 # https://github.com/fossas/fossa-cli/blob/master/docs/references/files/fossa-yml.md
 #
-# This configuration addresses false positives in license scanning.
-# Lacuna is an Apache 2.0 licensed Python library, not a single binary distribution.
+# Lacuna is an Apache 2.0 licensed Python library.
 # Python packages are dynamically linked/imported at runtime, not statically linked.
 
 version: 3
 
 project:
-  id: git+github.com/witlox/lacuna
+  id: github.com/witlox/lacuna
   name: lacuna
   url: https://github.com/witlox/lacuna
-  policy: default
 
-# License overrides for packages with incorrect license detection
-# These packages have permissive licenses but FOSSA detects GPL/LGPL from
-# bundled compiled components (e.g., BLAS, LAPACK, GCC runtime)
-vendoredDependencies:
-  # numpy is BSD-3-Clause licensed
-  # GPL flags are from bundled BLAS/LAPACK implementations, not numpy itself
-  # See: https://numpy.org/doc/stable/license.html
-  - name: pip+numpy
-    version: "1.24.0"
-    license: BSD-3-Clause
+# Path filtering - exclude test and development directories
+paths:
+  exclude:
+    - tests
+    - htmlcov
+    - docs
 
-  # torch (PyTorch) is BSD-style licensed
-  # GPL flags are from bundled GCC runtime components, not PyTorch itself
-  # See: https://github.com/pytorch/pytorch/blob/main/LICENSE
-  - name: pip+torch
-    version: "2.0.0"
-    license: BSD-3-Clause
-
-  # presidio-analyzer is MIT licensed (Microsoft project)
-  # See: https://github.com/microsoft/presidio/blob/main/LICENSE
-  - name: pip+presidio-analyzer
-    version: "2.2.0"
-    license: MIT
-
-  # presidio-anonymizer is MIT licensed (Microsoft project)
-  - name: pip+presidio-anonymizer
-    version: "2.2.0"
-    license: MIT
-
-  # psycopg2-binary is LGPL-3.0 licensed
-  # LGPL permits dynamic linking (Python imports) without source disclosure
-  # See: https://www.psycopg.org/docs/license.html
-  - name: pip+psycopg2-binary
-    version: "2.9.0"
-    license: LGPL-3.0-only
-
-# Analysis configuration
-analyze:
-  # Python/pip analysis
-  - type: pip
-    path: .
-
-# Notes on LGPL dependencies:
+# Notes on license compliance:
 #
-# psycopg2-binary (LGPL-3.0):
+# Some dependencies may flag GPL/LGPL licenses from bundled components:
+# - numpy: BSD-3-Clause (GPL flags from bundled BLAS/LAPACK)
+# - torch: BSD-3-Clause (GPL flags from bundled GCC runtime)
+# - presidio-*: MIT (Microsoft projects)
+# - psycopg2-binary: LGPL-3.0 (dynamic linking is compliant)
+#
+# LGPL dependencies (like psycopg2-binary):
 #   - LGPL allows dynamic linking without source disclosure
 #   - Python imports are dynamic linking, not static
-#   - No modification to psycopg2 source code
 #   - This is compliant with Apache 2.0 distribution
 #
 # For more details on Python package licensing and dynamic linking:
