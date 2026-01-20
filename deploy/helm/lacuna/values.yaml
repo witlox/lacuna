@@ -1,0 +1,306 @@
+# Default values for lacuna
+# This is a YAML-formatted file.
+
+# Number of API replicas
+replicaCount: 2
+
+image:
+  repository: ghcr.io/witlox/lacuna
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to chart appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account configuration
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8000
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: lacuna.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: lacuna-tls
+  #    hosts:
+  #      - lacuna.local
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Liveness probe
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Startup probe (for slow starting containers)
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - lacuna
+          topologyKey: kubernetes.io/hostname
+
+# Topology spread constraints
+topologySpreadConstraints: []
+
+# =============================================================================
+# Application Configuration
+# =============================================================================
+config:
+  environment: production
+  debug: false
+  logLevel: INFO
+  logFormat: json
+  
+  # Classification settings
+  classification:
+    embeddingEnabled: false
+    # modelEndpoint: http://model-server:8080
+  
+  # Policy engine
+  policy:
+    enabled: true
+    opaEndpoint: http://lacuna-opa:8181
+
+# Secrets (use external secret management in production)
+secrets:
+  # Generate with: openssl rand -hex 32
+  secretKey: ""
+  databasePassword: ""
+  redisPassword: ""
+
+# =============================================================================
+# PostgreSQL (Bitnami subchart)
+# =============================================================================
+postgresql:
+  enabled: true
+  auth:
+    username: lacuna
+    database: lacuna
+    # password set via secrets.databasePassword
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+      requests:
+        memory: 256Mi
+        cpu: 250m
+
+# External database (when postgresql.enabled=false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: lacuna
+  username: lacuna
+  # password set via secrets.databasePassword
+  sslMode: require
+
+# =============================================================================
+# Redis (Bitnami subchart)
+# =============================================================================
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    # password set via secrets.redisPassword
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 500m
+      requests:
+        memory: 128Mi
+        cpu: 100m
+
+# External Redis (when redis.enabled=false)
+externalRedis:
+  host: ""
+  port: 6379
+  # password set via secrets.redisPassword
+
+# =============================================================================
+# Open Policy Agent
+# =============================================================================
+opa:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: openpolicyagent/opa
+    tag: latest-static
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 500m
+    requests:
+      memory: 64Mi
+      cpu: 100m
+  # Mount policies from ConfigMap
+  policies:
+    configMapName: lacuna-opa-policies
+
+# =============================================================================
+# Database Migrations Job
+# =============================================================================
+migrations:
+  enabled: true
+  # Run as a pre-install/pre-upgrade hook
+  hook: true
+  backoffLimit: 3
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 500m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# =============================================================================
+# Network Policies
+# =============================================================================
+networkPolicy:
+  enabled: false
+  # Allow ingress from ingress controller
+  ingressController:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: ingress-nginx
+  # Allow egress to external services
+  egress:
+    enabled: true
+    # Allow DNS
+    dns: true
+    # Allow external HTTPS
+    https: true
+
+# =============================================================================
+# ServiceMonitor (Prometheus Operator)
+# =============================================================================
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+  # namespace: monitoring
+
+# =============================================================================
+# Extra environment variables
+# =============================================================================
+extraEnv: []
+# - name: MY_VAR
+#   value: "my-value"
+
+# Extra volume mounts
+extraVolumeMounts: []
+
+# Extra volumes
+extraVolumes: []

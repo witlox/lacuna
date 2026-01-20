@@ -1,0 +1,304 @@
+# Lacuna High-Availability Docker Compose
+# Includes PostgreSQL replication and Redis Sentinel
+
+x-lacuna-common: &lacuna-common
+  image: ${LACUNA_IMAGE:-ghcr.io/witlox/lacuna:latest}
+  restart: unless-stopped
+  networks:
+    - lacuna-network
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval: 15s
+    timeout: 10s
+    start_period: 30s
+    retries: 3
+
+services:
+  # ==========================================================================
+  # Load Balancer
+  # ==========================================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: lacuna-nginx
+    restart: unless-stopped
+    ports:
+      - "${LACUNA_PORT:-8000}:80"
+      - "${LACUNA_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - lacuna-api-1
+      - lacuna-api-2
+      - lacuna-api-3
+    networks:
+      - lacuna-network
+
+  # ==========================================================================
+  # Lacuna API Instances (3 replicas)
+  # ==========================================================================
+  lacuna-api-1:
+    <<: *lacuna-common
+    container_name: lacuna-api-1
+    environment: &lacuna-env
+      LACUNA_ENVIRONMENT: production
+      LACUNA_DATABASE__URL: postgresql://${POSTGRES_USER:-lacuna}:${POSTGRES_PASSWORD:-lacuna}@pgpool:5432/${POSTGRES_DB:-lacuna}
+      LACUNA_REDIS__URL: redis://:${REDIS_PASSWORD:-}@redis-sentinel:26379/0
+      LACUNA_REDIS__SENTINEL_MASTER: mymaster
+      LACUNA_POLICY__ENABLED: "true"
+      LACUNA_POLICY__OPA_ENDPOINT: http://opa:8181
+      LACUNA_LOGGING__FORMAT: json
+      LACUNA_INSTANCE_ID: api-1
+    depends_on:
+      - pgpool
+      - redis-sentinel
+      - opa
+
+  lacuna-api-2:
+    <<: *lacuna-common
+    container_name: lacuna-api-2
+    environment:
+      <<: *lacuna-env
+      LACUNA_INSTANCE_ID: api-2
+    depends_on:
+      - pgpool
+      - redis-sentinel
+      - opa
+
+  lacuna-api-3:
+    <<: *lacuna-common
+    container_name: lacuna-api-3
+    environment:
+      <<: *lacuna-env
+      LACUNA_INSTANCE_ID: api-3
+    depends_on:
+      - pgpool
+      - redis-sentinel
+      - opa
+
+  # ==========================================================================
+  # PostgreSQL Primary
+  # ==========================================================================
+  postgres-primary:
+    image: bitnami/postgresql:16
+    container_name: lacuna-postgres-primary
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: ${POSTGRES_REPL_PASSWORD:-repl_password}
+      POSTGRESQL_USERNAME: ${POSTGRES_USER:-lacuna}
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-lacuna}
+      POSTGRESQL_DATABASE: ${POSTGRES_DB:-lacuna}
+      POSTGRESQL_POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-admin_password}
+    volumes:
+      - postgres_primary_data:/bitnami/postgresql
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # ==========================================================================
+  # PostgreSQL Replica 1
+  # ==========================================================================
+  postgres-replica-1:
+    image: bitnami/postgresql:16
+    container_name: lacuna-postgres-replica-1
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: ${POSTGRES_REPL_PASSWORD:-repl_password}
+      POSTGRESQL_MASTER_HOST: postgres-primary
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-lacuna}
+    volumes:
+      - postgres_replica1_data:/bitnami/postgresql
+    depends_on:
+      - postgres-primary
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ==========================================================================
+  # PostgreSQL Replica 2
+  # ==========================================================================
+  postgres-replica-2:
+    image: bitnami/postgresql:16
+    container_name: lacuna-postgres-replica-2
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: ${POSTGRES_REPL_PASSWORD:-repl_password}
+      POSTGRESQL_MASTER_HOST: postgres-primary
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-lacuna}
+    volumes:
+      - postgres_replica2_data:/bitnami/postgresql
+    depends_on:
+      - postgres-primary
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ==========================================================================
+  # PgPool-II (Connection Pooling & Load Balancing)
+  # ==========================================================================
+  pgpool:
+    image: bitnami/pgpool:4
+    container_name: lacuna-pgpool
+    restart: unless-stopped
+    environment:
+      PGPOOL_BACKEND_NODES: 0:postgres-primary:5432,1:postgres-replica-1:5432,2:postgres-replica-2:5432
+      PGPOOL_SR_CHECK_USER: repl_user
+      PGPOOL_SR_CHECK_PASSWORD: ${POSTGRES_REPL_PASSWORD:-repl_password}
+      PGPOOL_POSTGRES_USERNAME: ${POSTGRES_USER:-lacuna}
+      PGPOOL_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lacuna}
+      PGPOOL_ADMIN_USERNAME: admin
+      PGPOOL_ADMIN_PASSWORD: ${PGPOOL_ADMIN_PASSWORD:-pgpool_admin}
+      PGPOOL_ENABLE_LOAD_BALANCING: "yes"
+      PGPOOL_NUM_INIT_CHILDREN: 32
+      PGPOOL_MAX_POOL: 4
+    depends_on:
+      - postgres-primary
+      - postgres-replica-1
+      - postgres-replica-2
+    networks:
+      - lacuna-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER:-lacuna}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # Redis Master
+  # ==========================================================================
+  redis-master:
+    image: bitnami/redis:7.2
+    container_name: lacuna-redis-master
+    restart: unless-stopped
+    environment:
+      REDIS_REPLICATION_MODE: master
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_master_data:/bitnami/redis/data
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ==========================================================================
+  # Redis Replicas
+  # ==========================================================================
+  redis-replica-1:
+    image: bitnami/redis:7.2
+    container_name: lacuna-redis-replica-1
+    restart: unless-stopped
+    environment:
+      REDIS_REPLICATION_MODE: slave
+      REDIS_MASTER_HOST: redis-master
+      REDIS_MASTER_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      - redis-master
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  redis-replica-2:
+    image: bitnami/redis:7.2
+    container_name: lacuna-redis-replica-2
+    restart: unless-stopped
+    environment:
+      REDIS_REPLICATION_MODE: slave
+      REDIS_MASTER_HOST: redis-master
+      REDIS_MASTER_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      - redis-master
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ==========================================================================
+  # Redis Sentinel (Failover Management)
+  # ==========================================================================
+  redis-sentinel:
+    image: bitnami/redis-sentinel:7.2
+    container_name: lacuna-redis-sentinel
+    restart: unless-stopped
+    environment:
+      REDIS_MASTER_HOST: redis-master
+      REDIS_MASTER_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_SENTINEL_QUORUM: 2
+    depends_on:
+      - redis-master
+      - redis-replica-1
+      - redis-replica-2
+    networks:
+      - lacuna-network
+    deploy:
+      replicas: 3
+
+  # ==========================================================================
+  # Open Policy Agent
+  # ==========================================================================
+  opa:
+    image: openpolicyagent/opa:latest-static
+    container_name: lacuna-opa
+    restart: unless-stopped
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "/policies"
+    volumes:
+      - ../../policies:/policies:ro
+    networks:
+      - lacuna-network
+
+  # ==========================================================================
+  # Database Migrations
+  # ==========================================================================
+  migrate:
+    image: ${LACUNA_IMAGE:-ghcr.io/witlox/lacuna:latest}
+    container_name: lacuna-migrate
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      LACUNA_DATABASE__URL: postgresql://${POSTGRES_USER:-lacuna}:${POSTGRES_PASSWORD:-lacuna}@pgpool:5432/${POSTGRES_DB:-lacuna}
+    depends_on:
+      pgpool:
+        condition: service_healthy
+    networks:
+      - lacuna-network
+    profiles:
+      - migrate
+    restart: "no"
+
+volumes:
+  postgres_primary_data:
+  postgres_replica1_data:
+  postgres_replica2_data:
+  redis_master_data:
+
+networks:
+  lacuna-network:
+    driver: bridge

@@ -1,0 +1,28 @@
+apiVersion: v2
+name: lacuna
+description: Privacy-aware data governance and lineage tracking for AI/ML workflows
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/witlox/lacuna
+sources:
+  - https://github.com/witlox/lacuna
+maintainers:
+  - name: witlox
+    url: https://github.com/witlox
+keywords:
+  - data-governance
+  - lineage
+  - privacy
+  - mlops
+  - ai
+  - classification
+dependencies:
+  - name: postgresql
+    version: "15.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "19.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

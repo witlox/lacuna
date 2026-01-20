@@ -1,0 +1,225 @@
+# Lacuna Production Docker Compose
+# Multi-replica setup with load balancing and health checks
+
+x-lacuna-common: &lacuna-common
+  image: ${LACUNA_IMAGE:-ghcr.io/witlox/lacuna:latest}
+  restart: unless-stopped
+  networks:
+    - lacuna-network
+  environment: &lacuna-env
+    LACUNA_ENVIRONMENT: production
+    LACUNA_DEBUG: "false"
+    LACUNA_DATABASE__URL: postgresql://${POSTGRES_USER:-lacuna}:${POSTGRES_PASSWORD:-lacuna}@postgres:5432/${POSTGRES_DB:-lacuna}
+    LACUNA_REDIS__URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+    LACUNA_POLICY__ENABLED: "true"
+    LACUNA_POLICY__OPA_ENDPOINT: http://opa:8181
+    LACUNA_LOGGING__LEVEL: ${LACUNA_LOGGING_LEVEL:-INFO}
+    LACUNA_LOGGING__FORMAT: json
+    LACUNA_CLASSIFICATION__EMBEDDING_ENABLED: ${LACUNA_CLASSIFICATION_EMBEDDING_ENABLED:-false}
+    LACUNA_SECRET_KEY: ${LACUNA_SECRET_KEY:-change-me-in-production}
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    opa:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval: 15s
+    timeout: 10s
+    start_period: 30s
+    retries: 3
+
+services:
+  # ==========================================================================
+  # Load Balancer / Reverse Proxy
+  # ==========================================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: lacuna-nginx
+    restart: unless-stopped
+    ports:
+      - "${LACUNA_PORT:-8000}:80"
+      - "${LACUNA_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - lacuna-api-1
+      - lacuna-api-2
+    networks:
+      - lacuna-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================================================
+  # Lacuna API Instances
+  # ==========================================================================
+  lacuna-api-1:
+    <<: *lacuna-common
+    container_name: lacuna-api-1
+    environment:
+      <<: *lacuna-env
+      LACUNA_INSTANCE_ID: api-1
+
+  lacuna-api-2:
+    <<: *lacuna-common
+    container_name: lacuna-api-2
+    environment:
+      <<: *lacuna-env
+      LACUNA_INSTANCE_ID: api-2
+
+  # Additional replicas can be added here or use docker compose scale
+
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: lacuna-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lacuna}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lacuna}
+      POSTGRES_DB: ${POSTGRES_DB:-lacuna}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-200}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "log_statement=none"
+      - "-c"
+      - "log_min_duration_statement=1000"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lacuna} -d ${POSTGRES_DB:-lacuna}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  # ==========================================================================
+  # Redis Cache
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: lacuna-redis
+    restart: unless-stopped
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+      - "--maxmemory"
+      - "512mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:-}"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+
+  # ==========================================================================
+  # Open Policy Agent
+  # ==========================================================================
+  opa:
+    image: openpolicyagent/opa:latest-static
+    container_name: lacuna-opa
+    restart: unless-stopped
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=info"
+      - "--addr=0.0.0.0:8181"
+      - "--set=decision_logs.console=true"
+      - "/policies"
+    volumes:
+      - ../../policies:/policies:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8181/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lacuna-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+
+  # ==========================================================================
+  # Database Migrations (run on demand)
+  # ==========================================================================
+  migrate:
+    image: ${LACUNA_IMAGE:-ghcr.io/witlox/lacuna:latest}
+    container_name: lacuna-migrate
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      LACUNA_DATABASE__URL: postgresql://${POSTGRES_USER:-lacuna}:${POSTGRES_PASSWORD:-lacuna}@postgres:5432/${POSTGRES_DB:-lacuna}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lacuna-network
+    profiles:
+      - migrate
+    restart: "no"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  lacuna-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

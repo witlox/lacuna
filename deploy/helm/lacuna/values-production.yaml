@@ -1,0 +1,109 @@
+# Production values for lacuna
+# Use with: helm install lacuna ./deploy/helm/lacuna -f values-production.yaml
+
+replicaCount: 3
+
+image:
+  pullPolicy: Always
+
+# Enable HPA for production
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Increase resources for production
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# PDB for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Spread across zones
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: lacuna
+
+# Enable ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1s"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: lacuna.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: lacuna-tls
+      hosts:
+        - lacuna.example.com
+
+# Application configuration
+config:
+  environment: production
+  debug: false
+  logLevel: INFO
+  logFormat: json
+  policy:
+    enabled: true
+
+# Use external managed database (recommended for production)
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: "your-postgres.region.rds.amazonaws.com"
+  port: 5432
+  database: lacuna
+  username: lacuna
+  sslMode: require
+
+# Use external managed Redis (recommended for production)
+redis:
+  enabled: false
+
+externalRedis:
+  host: "your-redis.region.cache.amazonaws.com"
+  port: 6379
+
+# OPA configuration
+opa:
+  enabled: true
+  replicaCount: 2
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+    requests:
+      memory: 128Mi
+      cpu: 200m
+
+# Enable network policies
+networkPolicy:
+  enabled: true
+
+# Enable Prometheus monitoring
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  labels:
+    release: prometheus

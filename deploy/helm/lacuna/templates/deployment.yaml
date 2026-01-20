@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lacuna.fullname" . }}
+  labels:
+    {{- include "lacuna.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "lacuna.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "lacuna.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "lacuna.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: LACUNA_ENVIRONMENT
+              value: {{ .Values.config.environment | quote }}
+            - name: LACUNA_DEBUG
+              value: {{ .Values.config.debug | quote }}
+            - name: LACUNA_LOGGING__LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: LACUNA_LOGGING__FORMAT
+              value: {{ .Values.config.logFormat | quote }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lacuna.fullname" . }}-secret
+                  key: database-password
+            - name: LACUNA_DATABASE__URL
+              value: {{ include "lacuna.databaseUrl" . | quote }}
+            {{- if or .Values.redis.enabled .Values.externalRedis.host }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lacuna.fullname" . }}-secret
+                  key: redis-password
+                  optional: true
+            - name: LACUNA_REDIS__URL
+              value: {{ include "lacuna.redisUrl" . | quote }}
+            {{- end }}
+            - name: LACUNA_POLICY__ENABLED
+              value: {{ .Values.config.policy.enabled | quote }}
+            {{- if .Values.config.policy.enabled }}
+            - name: LACUNA_POLICY__OPA_ENDPOINT
+              value: {{ include "lacuna.opaEndpoint" . | quote }}
+            {{- end }}
+            - name: LACUNA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lacuna.fullname" . }}-secret
+                  key: secret-key
+            - name: LACUNA_CLASSIFICATION__EMBEDDING_ENABLED
+              value: {{ .Values.config.classification.embeddingEnabled | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
