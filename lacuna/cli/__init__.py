@@ -366,6 +366,80 @@ def lineage_impact(artifact_id: str, json_output: bool) -> None:
 
 
 @cli.command()
+@click.option("--host", "-h", default="127.0.0.1", help="Host to bind to")
+@click.option("--port", "-p", default=8000, help="Port to bind to")
+@click.option("--reload/--no-reload", default=True, help="Enable auto-reload")
+def dev(host: str, port: int, reload: bool) -> None:
+    """Start Lacuna in development mode with lightweight backends.
+
+    Uses SQLite database, in-memory caching, and disables heavy services
+    like embedding models and LLM classification.
+
+    Example:
+        lacuna dev
+        lacuna dev --port 8080
+    """
+    import os
+    import shutil
+    from pathlib import Path
+
+    import uvicorn
+
+    # Set environment to development
+    os.environ["LACUNA_ENVIRONMENT"] = "development"
+    os.environ["LACUNA_DEBUG"] = "true"
+
+    # Use SQLite database
+    data_dir = Path("data")
+    data_dir.mkdir(exist_ok=True)
+    os.environ["LACUNA_DATABASE__URL"] = f"sqlite:///{data_dir}/lacuna_dev.db"
+
+    # Disable Redis (use in-memory)
+    os.environ["LACUNA_REDIS__ENABLED"] = "false"
+
+    # Disable heavy classifiers
+    os.environ["LACUNA_CLASSIFICATION__EMBEDDING_ENABLED"] = "false"
+    os.environ["LACUNA_CLASSIFICATION__LLM_ENABLED"] = "false"
+
+    # Disable policy engine
+    os.environ["LACUNA_POLICY__ENABLED"] = "false"
+
+    # Disable monitoring
+    os.environ["LACUNA_MONITORING__ENABLED"] = "false"
+
+    # Use text logging for readability
+    os.environ["LACUNA_LOG_FORMAT"] = "text"
+    os.environ["LACUNA_LOG_LEVEL"] = "DEBUG"
+
+    click.echo("🔧 Starting Lacuna in Development Mode")
+    click.echo(f"{'=' * 50}")
+    click.echo("  Database:    SQLite (data/lacuna_dev.db)")
+    click.echo("  Redis:       Disabled (in-memory cache)")
+    click.echo("  Classifiers: Heuristic only (fast)")
+    click.echo("  Policy:      Disabled")
+    click.echo(f"{'=' * 50}")
+    click.echo(f"  API:         http://{host}:{port}")
+    click.echo(f"  Docs:        http://{host}:{port}/docs")
+    click.echo(f"  Admin:       http://{host}:{port}/admin/")
+    click.echo(f"  User:        http://{host}:{port}/user/dashboard")
+    click.echo(f"{'=' * 50}")
+
+    # Initialize database
+    from lacuna.db.base import init_db
+
+    init_db()
+    click.echo("✓ Database initialized")
+
+    uvicorn.run(
+        "lacuna.api.app:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level="debug",
+    )
+
+
+@cli.command()
 @click.option("--host", "-h", default="0.0.0.0", help="Host to bind to")  # nosec B104
 @click.option("--port", "-p", default=8000, help="Port to bind to")
 @click.option("--reload/--no-reload", default=False, help="Enable auto-reload")

@@ -7,7 +7,6 @@ from typing import Any, Optional
 
 import structlog
 
-from lacuna.audit.backend import AuditBackend
 from lacuna.config import get_settings
 from lacuna.models.audit import AuditRecord, EventType, Severity
 from lacuna.models.classification import Classification
@@ -15,6 +14,21 @@ from lacuna.models.data_operation import DataOperation
 from lacuna.models.policy import PolicyDecision
 
 logger = structlog.get_logger()
+
+
+def get_audit_backend() -> Any:
+    """Get the appropriate audit backend based on configuration."""
+    settings = get_settings()
+
+    # Use in-memory backend for development with SQLite
+    if settings.database.url.startswith("sqlite"):
+        from lacuna.audit.memory_backend import InMemoryAuditBackend
+
+        return InMemoryAuditBackend(verify_on_write=settings.audit.verify_integrity)
+    else:
+        from lacuna.audit.backend import AuditBackend
+
+        return AuditBackend(verify_on_write=settings.audit.verify_integrity)
 
 
 class AuditLogger:
@@ -30,7 +44,7 @@ class AuditLogger:
 
     def __init__(
         self,
-        backend: Optional[AuditBackend] = None,
+        backend: Optional[Any] = None,
         batch_size: int = 100,
         flush_interval: float = 5.0,
         enabled: bool = True,
@@ -48,7 +62,7 @@ class AuditLogger:
         self.batch_size = batch_size
         self.flush_interval = flush_interval
 
-        self._backend = backend or AuditBackend()
+        self._backend = backend or get_audit_backend()
         self._queue: Queue[AuditRecord] = Queue()
         self._buffer: list[AuditRecord] = []
         self._lock = threading.Lock()

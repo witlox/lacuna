@@ -6,12 +6,26 @@ import networkx as nx
 import structlog
 
 from lacuna.config import get_settings
-from lacuna.lineage.backend import LineageBackend
 from lacuna.models.classification import Classification, DataTier
 from lacuna.models.data_operation import DataOperation
 from lacuna.models.lineage import LineageEdge, LineageGraph, LineageNode
 
 logger = structlog.get_logger()
+
+
+def get_lineage_backend() -> Any:
+    """Get the appropriate lineage backend based on configuration."""
+    settings = get_settings()
+
+    # Use in-memory backend for development with SQLite
+    if settings.database.url.startswith("sqlite"):
+        from lacuna.lineage.memory_backend import InMemoryLineageBackend
+
+        return InMemoryLineageBackend()
+    else:
+        from lacuna.lineage.backend import LineageBackend
+
+        return LineageBackend()
 
 
 class LineageTracker:
@@ -27,7 +41,7 @@ class LineageTracker:
 
     def __init__(
         self,
-        backend: Optional[LineageBackend] = None,
+        backend: Optional[Any] = None,
         enabled: bool = True,
         max_depth: int = 10,
     ):
@@ -41,7 +55,7 @@ class LineageTracker:
         settings = get_settings()
         self.enabled = enabled and settings.lineage.enabled
         self.max_depth = max_depth or settings.lineage.max_depth
-        self._backend = backend or LineageBackend()
+        self._backend = backend or get_lineage_backend()
 
         # In-memory graph for fast traversal
         self._graph = nx.DiGraph()

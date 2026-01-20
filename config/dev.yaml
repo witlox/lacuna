@@ -1,0 +1,97 @@
+# Lacuna Development Configuration
+#
+# This configuration is optimized for local development without external services.
+# Uses SQLite instead of PostgreSQL, disables Redis caching, and uses lightweight
+# classification options.
+#
+# To use: copy to config/default.yaml or set LACUNA_CONFIG_PATH=config/dev.yaml
+
+app:
+  name: Lacuna
+  version: 0.1.0
+  environment: development
+  debug: true
+
+# Database: SQLite for local development (no server needed)
+database:
+  url: sqlite:///data/lacuna_dev.db
+  pool_size: 5
+  max_overflow: 0
+  echo: true  # Log SQL queries for debugging
+
+# Redis: Disabled for development (uses in-memory fallback)
+redis:
+  url: redis://localhost:6379/0
+  ttl: 3600
+  enabled: false  # Disable Redis, use in-memory cache
+
+# Classification pipeline: Lightweight settings
+classification:
+  strategy: balanced
+  confidence_threshold: 0.85
+  short_circuit: true
+
+  # Heuristic layer: Fast pattern matching (always enabled)
+  heuristic_enabled: true
+  heuristic_priority: 60
+
+  # Embedding layer: Disabled by default (CPU intensive, slow on first load)
+  # Enable if you need semantic classification testing
+  embedding_enabled: false
+  embedding_priority: 70
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2  # Smaller, faster model
+  embedding_device: cpu
+
+  # LLM layer: Disabled (requires external API)
+  llm_enabled: false
+  llm_priority: 80
+  llm_endpoint: null
+  llm_model: null
+  llm_temperature: 0.1
+  llm_max_tokens: 500
+
+# Lineage tracking: Enabled with simplified settings
+lineage:
+  enabled: true
+  sampling_rate: 1.0
+  max_depth: 10
+
+# Audit logging: Enabled but with relaxed integrity checks
+audit:
+  enabled: true
+  retention_days: 30  # Shorter retention for dev
+  verify_integrity: false  # Skip hash chain verification for speed
+  alert_enabled: false  # No alerts in dev
+
+# Policy engine: Disabled (requires OPA server)
+policy:
+  enabled: false
+  opa_endpoint: null
+  opa_policy_path: lacuna/classification
+  opa_timeout: 1.0
+
+# Monitoring: Disabled for development
+monitoring:
+  enabled: false
+  prometheus_port: 9090
+  loki_url: null
+
+# Routing rules
+routing:
+  proprietary_local_rag: true
+  proprietary_web_search: false
+  internal_local_rag: true
+  internal_web_search: false
+  public_local_rag: true
+  public_web_search: false  # Disable web search in dev
+
+# API configuration
+api:
+  host: 127.0.0.1  # Localhost only for dev
+  port: 8000
+  api_key: null  # No auth in dev
+
+# Logging: Human-readable format for development
+logging:
+  level: DEBUG
+  format: text  # text format for readability (json for production)

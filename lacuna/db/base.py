@@ -22,13 +22,24 @@ def get_engine() -> Engine:
     global _engine
     if _engine is None:
         settings = get_settings()
-        _engine = create_engine(
-            settings.database.url,
-            pool_size=settings.database.pool_size,
-            max_overflow=settings.database.max_overflow,
-            echo=settings.database.echo,
-            pool_pre_ping=True,  # Verify connections before using
-        )
+        db_url = settings.database.url
+
+        # SQLite doesn't support connection pooling the same way
+        if db_url.startswith("sqlite"):
+            _engine = create_engine(
+                db_url,
+                echo=settings.database.echo,
+                connect_args={"check_same_thread": False},  # Allow multi-thread access
+            )
+        else:
+            # PostgreSQL and other databases
+            _engine = create_engine(
+                db_url,
+                pool_size=settings.database.pool_size,
+                max_overflow=settings.database.max_overflow,
+                echo=settings.database.echo,
+                pool_pre_ping=True,  # Verify connections before using
+            )
     return _engine
 
 
