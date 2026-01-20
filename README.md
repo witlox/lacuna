@@ -292,7 +292,18 @@ pip install lacuna
 lacuna serve --host 0.0.0.0 --port 8000
 ```
 
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker Compose, Kubernetes, and Helm deployments.
+See [Deployment Guide](docs/DEPLOYMENT.md) for details, or use the production-ready configurations:
+
+```bash
+# Docker Compose production stack
+docker compose -f deploy/docker/docker-compose.prod.yaml up -d
+
+# High-availability with PostgreSQL replication
+docker compose -f deploy/docker/docker-compose.ha.yaml up -d
+
+# Kubernetes with Helm
+helm install lacuna ./deploy/helm/lacuna -f deploy/helm/lacuna/values-production.yaml
+```
 
 ## Documentation
 
@@ -305,6 +316,27 @@ See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker Compose, Kubernetes, and Helm
 - **[Integration Guide](docs/INTEGRATIONS.md)** - dbt, Databricks, Snowflake
 - **[Plugin Development](docs/PLUGINS.md)** - Extending Lacuna
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production setup
+
+## Examples
+
+The [`examples/`](examples/) directory contains runnable scripts demonstrating Lacuna features:
+
+| Example | Description |
+|---------|-------------|
+| [`basic_classification.py`](examples/basic_classification.py) | Classify data and check sensitivity tiers |
+| [`policy_evaluation.py`](examples/policy_evaluation.py) | Evaluate operations against policies |
+| [`lineage_tracking.py`](examples/lineage_tracking.py) | Track data lineage and provenance |
+| [`audit_logging.py`](examples/audit_logging.py) | Query and inspect audit logs |
+| [`api_client.py`](examples/api_client.py) | HTTP client for the REST API |
+| [`batch_classification.py`](examples/batch_classification.py) | Classify multiple items efficiently |
+| [`custom_classifier.py`](examples/custom_classifier.py) | Create custom classification rules |
+| [`governance_workflow.py`](examples/governance_workflow.py) | Complete governance workflow |
+
+```bash
+# Run examples after starting dev server
+lacuna dev &
+python examples/basic_classification.py
+```
 
 ## Why Lacuna?
 

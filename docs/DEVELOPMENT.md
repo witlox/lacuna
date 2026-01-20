@@ -163,6 +163,34 @@ LACUNA_RUN_INTEGRATION_TESTS=true pytest tests/integration/
 
 ---
 
+## Examples
+
+The [`examples/`](../examples/) directory contains runnable scripts demonstrating Lacuna features:
+
+```bash
+# Start dev server in background
+lacuna dev &
+
+# Run classification example
+python examples/basic_classification.py
+
+# Run full governance workflow
+python examples/governance_workflow.py
+```
+
+| Example | Description |
+|---------|-------------|
+| `basic_classification.py` | Classify data sensitivity |
+| `policy_evaluation.py` | Evaluate operations against policies |
+| `lineage_tracking.py` | Track data lineage |
+| `audit_logging.py` | Query audit logs |
+| `api_client.py` | REST API HTTP client |
+| `batch_classification.py` | Batch classification |
+| `custom_classifier.py` | Custom classifiers |
+| `governance_workflow.py` | End-to-end workflow |
+
+---
+
 ## Code Quality
 
 ```bash

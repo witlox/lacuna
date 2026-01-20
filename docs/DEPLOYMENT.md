@@ -8,6 +8,71 @@ Deploy Lacuna in production with Docker, Kubernetes, and Helm for enterprise-sca
 
 ---
 
+## Production-Ready Configurations
+
+The [`deploy/`](../deploy/) directory contains production-ready configurations:
+
+```
+deploy/
+├── README.md                      # Deployment overview
+├── docker/
+│   ├── docker-compose.prod.yaml   # Production multi-replica setup
+│   ├── docker-compose.ha.yaml     # High-availability (PostgreSQL replication, Redis Sentinel)
+│   ├── nginx.conf                 # Load balancer with rate limiting
+│   ├── .env.example               # Environment template
+│   └── init-db.sql                # Database initialization
+│
+└── helm/lacuna/
+    ├── Chart.yaml                 # Helm chart definition
+    ├── values.yaml                # Default values
+    ├── values-production.yaml     # Production values
+    └── templates/                 # Kubernetes manifests
+```
+
+### Quick Start (Production Docker)
+
+```bash
+# Copy and configure environment
+cp deploy/docker/.env.example deploy/docker/.env
+# Edit deploy/docker/.env with production values
+
+# Start production stack (2 API replicas, Nginx load balancer)
+docker compose -f deploy/docker/docker-compose.prod.yaml up -d
+
+# Run database migrations
+docker compose -f deploy/docker/docker-compose.prod.yaml --profile migrate up migrate
+
+# Scale API replicas
+docker compose -f deploy/docker/docker-compose.prod.yaml up -d --scale lacuna-api=5
+```
+
+### Quick Start (High Availability)
+
+```bash
+# HA setup includes:
+# - 3 API replicas
+# - PostgreSQL primary + 2 replicas with PgPool
+# - Redis master + 2 replicas with Sentinel
+docker compose -f deploy/docker/docker-compose.ha.yaml up -d
+```
+
+### Quick Start (Kubernetes/Helm)
+
+```bash
+# Add Bitnami repo for PostgreSQL/Redis dependencies
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm dependency update ./deploy/helm/lacuna
+
+# Install with production values
+helm install lacuna ./deploy/helm/lacuna \
+  -f deploy/helm/lacuna/values-production.yaml \
+  --set secrets.databasePassword=YOUR_PASSWORD \
+  --set secrets.redisPassword=YOUR_PASSWORD \
+  --set ingress.hosts[0].host=lacuna.yourdomain.com
+```
+
+---
+
 ## Deployment Options
 
 | Method | Best For | Complexity | Scale |
