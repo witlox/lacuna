@@ -17,35 +17,27 @@ paths:
     - tests
     - htmlcov
     - docs
+    - .venv
+    - lacuna.egg-info
 
-# Vendored dependencies - false positives from bundled components
-# These packages have permissive licenses but FOSSA detects GPL from bundled
-# system libraries (BLAS/LAPACK, GCC runtime, etc.) that are dynamically linked
-vendored-dependencies:
-  # numpy: BSD-3-Clause - GPL flags from bundled BLAS/LAPACK headers
-  - name: numpy
-    version: "*"
-  # scipy: BSD-3-Clause - GPL flags from bundled Fortran/BLAS components
-  - name: scipy
-    version: "*"
-  # torch: BSD-3-Clause - GPL flags from bundled GCC runtime
-  - name: torch
-    version: "*"
-  # ruff: MIT - GPL flags from tree-sitter grammars (not linked)
-  - name: ruff
-    version: "*"
-  # setuptools: MIT - GPL flags from pkg_resources vendored code
-  - name: setuptools
-    version: "*"
+# Target configuration
+targets:
+  only:
+    - type: pip
+      path: .
 
 # Notes on license compliance:
 #
-# Some dependencies may flag GPL/LGPL licenses from bundled components:
-# - numpy: BSD-3-Clause (GPL flags from bundled BLAS/LAPACK)
+# False positives from bundled components (these packages are permissively licensed):
+# - numpy: BSD-3-Clause (GPL flags from bundled BLAS/LAPACK headers)
+# - scipy: BSD-3-Clause (GPL flags from bundled Fortran/BLAS components)
 # - torch: BSD-3-Clause (GPL flags from bundled GCC runtime)
-# - scipy: BSD-3-Clause (GPL flags from bundled Fortran libraries)
-# - presidio-*: MIT (Microsoft projects)
+# - ruff: MIT (GPL flags from tree-sitter grammars - dev dependency only)
+# - setuptools: MIT (GPL flags from vendored code)
 # - psycopg2-binary: LGPL-3.0 (dynamic linking is compliant)
+#
+# These issues should be marked as resolved in the FOSSA dashboard:
+# https://app.fossa.com/projects/git%2Bgithub.com%2Fwitlox%2Flacuna
 #
 # LGPL dependencies (like psycopg2-binary):
 #   - LGPL allows dynamic linking without source disclosure
