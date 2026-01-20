@@ -272,6 +272,8 @@ source = ["lacuna"]
 omit = [
     "tests/*",
     "examples/*",
+    "lacuna/web/*",
+    "lacuna/cli/admin.py",
 ]
 
 [tool.coverage.report]
