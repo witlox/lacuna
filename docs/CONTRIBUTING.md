@@ -779,23 +779,28 @@ share_data(
 
 ### Versioning
 
-We use [Semantic Versioning](https://semver.org/):
-- MAJOR: Breaking changes
-- MINOR: New features (backward compatible)
-- PATCH: Bug fixes
+We use a date-based versioning scheme: **year.major.buildnumber**
+- YEAR: Current year (e.g., 2026)
+- MAJOR: Major version increment within the year (set in `lacuna/__version__.py`)
+- BUILDNUMBER: Incremental build number (automatically generated from git commit count)
+
+**Version is automatically generated** from git history. To increment the major version, update the `major` variable in `lacuna/__version__.py`.
+
+For building packages locally with proper version:
+```bash
+LACUNA_BUILD=1 python -m build
+```
 
 ### Release Checklist
 
 1. Update CHANGELOG.md
-2. Update version in:
-   - `setup.py` or `pyproject.toml`
-   - `lacuna/__init__.py`
+2. Update major version if needed (in `lacuna/__version__.py`)
 3. Run full test suite: `pytest`
 4. Test OPA policies: `opa test policies/`
-5. Tag release: `git tag v0.2.0`
+5. Tag release: `git tag v2026.1.100`
 6. Push tags: `git push --tags`
 7. Create GitHub release with notes
-8. Publish to PyPI: `python -m build && twine upload dist/*`
+8. Publish to PyPI: `LACUNA_BUILD=1 python -m build && twine upload dist/*`
 9. Update documentation site (if applicable)
 
 ## Recognition

@@ -57,6 +57,8 @@ jobs:
 
       - name: Build package
         run: python -m build
+        env:
+          LACUNA_BUILD: "1"
 
       - name: Check package
         run: twine check dist/*

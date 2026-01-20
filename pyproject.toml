@@ -168,6 +168,9 @@ where = ["."]
 include = ["lacuna*"]
 exclude = ["tests*", "examples*", "docs*"]
 
+[tool.setuptools.package-data]
+lacuna = ["_version.txt"]
+
 [tool.setuptools.dynamic]
 version = {attr = "lacuna.__version__.__version__"}
 
