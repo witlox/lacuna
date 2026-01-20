@@ -2,7 +2,7 @@
 # Multi-stage build for efficient image size
 
 # Build stage
-FROM python:3.14-slim as builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
@@ -10,18 +10,20 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
 COPY pyproject.toml README.md ./
-COPY lacuna/__version__.py lacuna/
+COPY lacuna/ lacuna/
+COPY .git/ .git/
 
 # Install dependencies
 RUN pip install --no-cache-dir build wheel && \
     pip wheel --no-cache-dir --wheel-dir /app/wheels -e .
 
 # Runtime stage
-FROM python:3.14-slim as runtime
+FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
