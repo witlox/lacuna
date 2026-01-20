@@ -1,6 +1,6 @@
 """Embedding-based classifier using semantic similarity."""
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class EmbeddingClassifier(Classifier):
 
         self.model_name = model_name or settings.classification.embedding_model
         self.threshold = threshold
-        self.model: Optional["SentenceTransformer"] = None
+        self.model: Optional[SentenceTransformer] = None
         self.examples_by_tier = examples_by_tier or self._default_examples()
         self.example_embeddings: dict[DataTier, np.ndarray] = {}
 
