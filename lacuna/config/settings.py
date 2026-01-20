@@ -146,7 +146,7 @@ class Settings(BaseSettings):
     log_format: str = Field(default="json", description="Log format: json or text")
 
     # API settings
-    api_host: str = Field(default="0.0.0.0", description="API host")
+    api_host: str = Field(default="0.0.0.0", description="API host")  # nosec B104
     api_port: int = Field(default=8000, description="API port")
     api_key: Optional[str] = Field(
         default=None, description="API key for authentication"

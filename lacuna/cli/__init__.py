@@ -365,7 +365,7 @@ def lineage_impact(artifact_id: str, json_output: bool) -> None:
 
 
 @cli.command()
-@click.option("--host", "-h", default="0.0.0.0", help="Host to bind to")
+@click.option("--host", "-h", default="0.0.0.0", help="Host to bind to")  # nosec B104
 @click.option("--port", "-p", default=8000, help="Port to bind to")
 @click.option("--reload/--no-reload", default=False, help="Enable auto-reload")
 def serve(host: str, port: int, reload: bool) -> None:
@@ -399,6 +399,8 @@ def migrate(revision: Optional[str], message: Optional[str], generate: bool) -> 
         lacuna migrate
         lacuna migrate --generate -m "Add new column"
     """
+    # Parameters reserved for future implementation
+    _ = (revision, message, generate)
     click.echo("Database migrations not yet implemented.")
     click.echo("Use: alembic upgrade head")
 

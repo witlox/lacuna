@@ -263,7 +263,7 @@ class PolicyEngine:
             # Check for unmanaged locations
             unmanaged_patterns = [
                 "~/Downloads",
-                "/tmp",
+                "/tmp",  # nosec B108 - pattern matching, not file access
                 "Downloads",
                 "Desktop",
             ]
