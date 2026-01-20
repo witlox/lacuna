@@ -44,7 +44,8 @@ def get_session_factory() -> sessionmaker:
 def get_session() -> Session:
     """Get a new database session."""
     SessionLocal = get_session_factory()
-    return SessionLocal()
+    session: Session = SessionLocal()
+    return session
 
 
 @contextmanager

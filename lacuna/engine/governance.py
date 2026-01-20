@@ -175,7 +175,7 @@ class GovernanceEngine:
         classification = self._classifier.classify(query, context)
 
         # Log classification
-        user_id = context.user_id if context else "anonymous"
+        user_id = context.user_id if context and context.user_id else "anonymous"
         self._audit_logger.log_classification(classification, query, user_id)
 
         return classification

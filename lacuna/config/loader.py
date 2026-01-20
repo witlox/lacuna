@@ -41,7 +41,7 @@ class ConfigLoader:
         Returns:
             Merged configuration dictionary
         """
-        config = {}
+        config: dict[str, Any] = {}
 
         # Load in priority order
         for filename in [

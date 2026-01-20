@@ -1,7 +1,7 @@
 """Lineage storage backend for PostgreSQL."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 import structlog
 from sqlalchemy import desc
@@ -216,7 +216,7 @@ class LineageBackend:
 
     def _model_to_edge(self, model: LineageEdgeModel) -> LineageEdge:
         """Convert database model to LineageEdge."""
-        extra_data = model.extra_data or {}
+        extra_data: dict[str, Any] = dict(model.extra_data) if model.extra_data else {}
         return LineageEdge(
             edge_id=model.id,
             timestamp=model.timestamp,

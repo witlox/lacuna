@@ -98,7 +98,7 @@ class OPAClient:
                 return None
 
             result = response.json()
-            return result.get("result")
+            return dict(result.get("result")) if result.get("result") else None
 
         except requests.Timeout:
             logger.warning("opa_timeout", url=url, timeout=self.timeout)
@@ -150,7 +150,7 @@ class OPAClient:
             )
 
             if response.status_code == 200:
-                return response.json()
+                return dict(response.json())
             return None
 
         except requests.RequestException:

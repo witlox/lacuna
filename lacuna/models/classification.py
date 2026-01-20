@@ -19,8 +19,10 @@ class DataTier(str, Enum):
     INTERNAL = "INTERNAL"
     PUBLIC = "PUBLIC"
 
-    def __lt__(self, other: "DataTier") -> bool:
+    def __lt__(self, other: object) -> bool:  # type: ignore[override]
         """Compare tiers by sensitivity level."""
+        if not isinstance(other, DataTier):
+            return NotImplemented
         order = {
             DataTier.PUBLIC: 0,
             DataTier.INTERNAL: 1,
@@ -28,8 +30,10 @@ class DataTier(str, Enum):
         }
         return order[self] < order[other]
 
-    def __le__(self, other: "DataTier") -> bool:
+    def __le__(self, other: object) -> bool:  # type: ignore[override]
         """Compare tiers by sensitivity level."""
+        if not isinstance(other, DataTier):
+            return NotImplemented
         return self == other or self < other
 
     @property

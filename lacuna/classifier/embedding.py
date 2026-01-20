@@ -1,12 +1,15 @@
 """Embedding-based classifier using semantic similarity."""
 
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
 from lacuna.classifier.base import Classifier
 from lacuna.config import get_settings
 from lacuna.models.classification import Classification, ClassificationContext, DataTier
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingClassifier(Classifier):
@@ -37,7 +40,7 @@ class EmbeddingClassifier(Classifier):
 
         self.model_name = model_name or settings.classification.embedding_model
         self.threshold = threshold
-        self.model = None
+        self.model: Optional["SentenceTransformer"] = None
         self.examples_by_tier = examples_by_tier or self._default_examples()
         self.example_embeddings: dict[DataTier, np.ndarray] = {}
 
@@ -126,7 +129,7 @@ class EmbeddingClassifier(Classifier):
             similarities[tier] = similarity
 
         # Find best match
-        best_tier = max(similarities, key=similarities.get)
+        best_tier = max(similarities, key=lambda t: similarities[t])
         best_similarity = similarities[best_tier]
 
         # Check if above threshold

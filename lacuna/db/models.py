@@ -37,8 +37,8 @@ class ClassificationModel(Base):
     tier = Column(String(20), nullable=False, index=True)
     confidence = Column(Float, nullable=False)
     reasoning = Column(Text, nullable=False)
-    matched_rules = Column(ARRAY(String), default=list)
-    tags = Column(ARRAY(String), default=list, index=True)
+    matched_rules: Column[list[str]] = Column(ARRAY(String), default=list)
+    tags: Column[list[str]] = Column(ARRAY(String), default=list, index=True)
 
     # Classifier information
     classifier_name = Column(String(100), nullable=False)
@@ -128,7 +128,7 @@ class AuditLogModel(Base):
     resource_type = Column(String(50), nullable=False)
     resource_id = Column(String(500), nullable=False, index=True)
     resource_classification = Column(String(20), index=True)
-    resource_tags = Column(ARRAY(String), default=list)
+    resource_tags: Column[list[str]] = Column(ARRAY(String), default=list)
 
     # Action details
     action = Column(String(100), nullable=False)
@@ -144,10 +144,10 @@ class AuditLogModel(Base):
 
     # Lineage/Provenance
     parent_event_id = Column(UUID(as_uuid=True), ForeignKey("audit_log.event_id"))
-    lineage_chain = Column(ARRAY(String), default=list)
+    lineage_chain: Column[list[str]] = Column(ARRAY(String), default=list)
 
     # Compliance metadata
-    compliance_flags = Column(ARRAY(String), default=list)
+    compliance_flags: Column[list[str]] = Column(ARRAY(String), default=list)
     retention_period_days = Column(Integer, default=2555)
 
     # Tamper detection (hash chain)

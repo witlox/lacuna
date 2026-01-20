@@ -191,7 +191,7 @@ def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
     if config_path is None:
         config_path = Path("config")
 
-    config = {}
+    config: dict[str, Any] = {}
 
     # Load main config
     config_file = config_path / "default.yaml"
