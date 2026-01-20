@@ -1,11 +1,12 @@
 """FastAPI application factory."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import Optional
 
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import structlog
 
 from lacuna.__version__ import __version__
 from lacuna.config import get_settings
@@ -14,7 +15,7 @@ from lacuna.engine.governance import GovernanceEngine
 logger = structlog.get_logger()
 
 # Global governance engine instance
-_engine: GovernanceEngine | None = None
+_engine: Optional[GovernanceEngine] = None
 
 
 def get_engine() -> GovernanceEngine:
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application."""
-    settings = get_settings()
+    _settings = get_settings()
 
     app = FastAPI(
         title="Lacuna",
@@ -66,7 +67,7 @@ def create_app() -> FastAPI:
     )
 
     # Register routes
-    from lacuna.api.routes import classify, evaluate, lineage, audit, health
+    from lacuna.api.routes import audit, classify, evaluate, health, lineage
 
     app.include_router(health.router, tags=["Health"])
     app.include_router(classify.router, prefix="/api/v1", tags=["Classification"])
@@ -79,4 +80,3 @@ def create_app() -> FastAPI:
 
 # Create the default app instance
 app = create_app()
-

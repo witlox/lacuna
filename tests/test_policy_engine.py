@@ -1,12 +1,13 @@
 """Additional tests for PolicyEngine to improve coverage."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from lacuna.policy.engine import PolicyEngine
-from lacuna.policy.client import OPAClient
-from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+import pytest
+
 from lacuna.models.classification import Classification, DataTier
+from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+from lacuna.policy.client import OPAClient
+from lacuna.policy.engine import PolicyEngine
 
 
 class TestPolicyEngineFallback:
@@ -21,9 +22,11 @@ class TestPolicyEngineFallback:
         mock_client.policy_path = "lacuna/classification"
 
         # Mock settings to enable policy
-        with patch('lacuna.policy.engine.get_settings') as mock_settings:
+        with patch("lacuna.policy.engine.get_settings") as mock_settings:
             mock_settings.return_value.policy.enabled = True
-            engine = PolicyEngine(opa_client=mock_client, enabled=True, fallback_on_error=True)
+            engine = PolicyEngine(
+                opa_client=mock_client, enabled=True, fallback_on_error=True
+            )
             # Force enabled since settings are mocked
             engine.enabled = True
             return engine
@@ -153,7 +156,7 @@ class TestPolicyEngineOPAParsing:
         mock_client.endpoint = "http://localhost:8181"
         mock_client.policy_path = "lacuna/classification"
 
-        with patch('lacuna.policy.engine.get_settings') as mock_settings:
+        with patch("lacuna.policy.engine.get_settings") as mock_settings:
             mock_settings.return_value.policy.enabled = True
             engine = PolicyEngine(opa_client=mock_client, enabled=True)
             engine.enabled = True
@@ -198,8 +201,16 @@ class TestPolicyEngineOPAParsing:
         """Test parsing OPA classification result format."""
         opa_result = {
             "classification": [
-                {"tier": "PROPRIETARY", "confidence": 0.95, "reasoning": "Customer data"},
-                {"tier": "INTERNAL", "confidence": 0.7, "reasoning": "Internal reference"},
+                {
+                    "tier": "PROPRIETARY",
+                    "confidence": 0.95,
+                    "reasoning": "Customer data",
+                },
+                {
+                    "tier": "INTERNAL",
+                    "confidence": 0.7,
+                    "reasoning": "Internal reference",
+                },
             ]
         }
 
@@ -230,7 +241,7 @@ class TestPolicyEngineCaching:
         mock_client.endpoint = "http://localhost:8181"
         mock_client.policy_path = "lacuna/classification"
 
-        with patch('lacuna.policy.engine.get_settings') as mock_settings:
+        with patch("lacuna.policy.engine.get_settings") as mock_settings:
             mock_settings.return_value.policy.enabled = True
             engine = PolicyEngine(opa_client=mock_client, enabled=True)
             engine.enabled = True
@@ -247,17 +258,19 @@ class TestPolicyEngineCaching:
             )
 
             # First call
-            result1 = engine.evaluate(operation, classification)
+            _result1 = engine.evaluate(operation, classification)
 
             # Second call should hit cache
-            result2 = engine.evaluate(operation, classification)
+            _result2 = engine.evaluate(operation, classification)
 
             # OPA should only be called once
-            assert mock_client.evaluate.call_count <= 2  # May be called twice due to cache key differences
+            assert (
+                mock_client.evaluate.call_count <= 2
+            )  # May be called twice due to cache key differences
 
     def test_disabled_engine_allows_all(self) -> None:
         """Test that disabled engine allows all operations."""
-        with patch('lacuna.policy.engine.get_settings') as mock_settings:
+        with patch("lacuna.policy.engine.get_settings") as mock_settings:
             mock_settings.return_value.policy.enabled = False
             engine = PolicyEngine(enabled=False)
 
@@ -288,7 +301,7 @@ class TestPolicyEngineStats:
         mock_client.endpoint = "http://localhost:8181"
         mock_client.policy_path = "lacuna/classification"
 
-        with patch('lacuna.policy.engine.get_settings') as mock_settings:
+        with patch("lacuna.policy.engine.get_settings") as mock_settings:
             mock_settings.return_value.policy.enabled = True
             engine = PolicyEngine(opa_client=mock_client, enabled=True)
 
@@ -306,4 +319,3 @@ class TestPolicyEngineStats:
 
             assert "cache_size" in stats
             assert "opa_available" in stats
-

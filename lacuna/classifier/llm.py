@@ -155,7 +155,8 @@ Respond with JSON in this exact format:
 
             # Support OpenAI-compatible APIs (vLLM, Ollama, etc.)
             client = openai.OpenAI(
-                base_url=self.endpoint, api_key="not-needed"  # Many local servers don't need API key
+                base_url=self.endpoint,
+                api_key="not-needed",  # Many local servers don't need API key
             )
 
             response = client.chat.completions.create(
@@ -170,10 +171,10 @@ Respond with JSON in this exact format:
 
             return response.choices[0].message.content
 
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "openai not installed. Install with: pip install openai"
-            )
+            ) from err
         except Exception as e:
             import structlog
 

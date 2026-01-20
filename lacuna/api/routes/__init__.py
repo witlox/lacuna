@@ -1,6 +1,6 @@
 """API routes for Lacuna."""
 
-from lacuna.api.routes import classify, evaluate, lineage, audit, health
+from lacuna.api.routes import audit, classify, evaluate, health, lineage
 
 __all__ = [
     "classify",
@@ -9,4 +9,3 @@ __all__ = [
     "audit",
     "health",
 ]
-

@@ -1,7 +1,7 @@
 """Heuristic classifier using regex and keyword matching."""
 
 import re
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 from lacuna.classifier.base import Classifier
 from lacuna.config import get_settings
@@ -18,9 +18,9 @@ class HeuristicClassifier(Classifier):
 
     def __init__(
         self,
-        proprietary_terms: Optional[List[str]] = None,
-        proprietary_projects: Optional[List[str]] = None,
-        proprietary_customers: Optional[List[str]] = None,
+        proprietary_terms: Optional[list[str]] = None,
+        proprietary_projects: Optional[list[str]] = None,
+        proprietary_customers: Optional[list[str]] = None,
         priority: int = 60,
     ):
         """Initialize heuristic classifier.
@@ -47,9 +47,7 @@ class HeuristicClassifier(Classifier):
 
         # PII patterns
         self.pii_patterns = {
-            "email": re.compile(
-                r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-            ),
+            "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
             "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
             "phone": re.compile(r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b"),
             "credit_card": re.compile(r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b"),
@@ -221,7 +219,7 @@ class HeuristicClassifier(Classifier):
         # No clear match - return None to pass to next classifier
         return None
 
-    def _detect_pii(self, text: str) -> List[str]:
+    def _detect_pii(self, text: str) -> list[str]:
         """Detect PII patterns in text.
 
         Args:

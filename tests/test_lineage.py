@@ -2,7 +2,7 @@
 
 import pytest
 
-from lacuna.models.lineage import LineageEdge, LineageNode, LineageGraph
+from lacuna.models.lineage import LineageEdge, LineageGraph, LineageNode
 
 
 class TestLineageNode:
@@ -106,8 +106,12 @@ class TestLineageGraph:
         graph = LineageGraph()
 
         # A -> B -> C
-        graph.add_edge(LineageEdge(source_id="A", destination_id="B", operation_type="t"))
-        graph.add_edge(LineageEdge(source_id="B", destination_id="C", operation_type="t"))
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="B", operation_type="t")
+        )
+        graph.add_edge(
+            LineageEdge(source_id="B", destination_id="C", operation_type="t")
+        )
 
         upstream = graph.get_upstream("C")
 
@@ -120,8 +124,12 @@ class TestLineageGraph:
         graph = LineageGraph()
 
         # A -> B, A -> C
-        graph.add_edge(LineageEdge(source_id="A", destination_id="B", operation_type="t"))
-        graph.add_edge(LineageEdge(source_id="A", destination_id="C", operation_type="t"))
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="B", operation_type="t")
+        )
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="C", operation_type="t")
+        )
 
         downstream = graph.get_downstream("A")
 
@@ -134,9 +142,15 @@ class TestLineageGraph:
         graph = LineageGraph()
 
         # A -> B -> C -> D
-        graph.add_edge(LineageEdge(source_id="A", destination_id="B", operation_type="t"))
-        graph.add_edge(LineageEdge(source_id="B", destination_id="C", operation_type="t"))
-        graph.add_edge(LineageEdge(source_id="C", destination_id="D", operation_type="t"))
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="B", operation_type="t")
+        )
+        graph.add_edge(
+            LineageEdge(source_id="B", destination_id="C", operation_type="t")
+        )
+        graph.add_edge(
+            LineageEdge(source_id="C", destination_id="D", operation_type="t")
+        )
 
         # With max_depth=1, should only get C
         upstream = graph.get_upstream("D", max_depth=1)
@@ -149,8 +163,12 @@ class TestLineageGraph:
         graph = LineageGraph()
 
         # Root A and B both feed into C
-        graph.add_edge(LineageEdge(source_id="A", destination_id="C", operation_type="t"))
-        graph.add_edge(LineageEdge(source_id="B", destination_id="C", operation_type="t"))
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="C", operation_type="t")
+        )
+        graph.add_edge(
+            LineageEdge(source_id="B", destination_id="C", operation_type="t")
+        )
 
         chains = graph.get_lineage_chain("C")
 
@@ -161,7 +179,9 @@ class TestLineageGraph:
         """Test GraphViz output generation."""
         graph = LineageGraph()
 
-        graph.add_edge(LineageEdge(source_id="A", destination_id="B", operation_type="join"))
+        graph.add_edge(
+            LineageEdge(source_id="A", destination_id="B", operation_type="join")
+        )
 
         dot = graph.to_graphviz()
 
@@ -169,4 +189,3 @@ class TestLineageGraph:
         assert '"A"' in dot
         assert '"B"' in dot
         assert "join" in dot
-

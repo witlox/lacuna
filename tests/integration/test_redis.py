@@ -1,8 +1,9 @@
 """Integration tests for Redis caching."""
 
-import pytest
 import json
 from datetime import datetime, timezone
+
+import pytest
 
 pytestmark = pytest.mark.integration
 
@@ -37,9 +38,7 @@ class TestClassificationCache:
         }
 
         redis_client.setex(
-            cache_key,
-            3600,  # 1 hour TTL
-            json.dumps(classification_data)
+            cache_key, 3600, json.dumps(classification_data)  # 1 hour TTL
         )
 
         # Retrieve and verify
@@ -61,6 +60,7 @@ class TestClassificationCache:
 
         # Wait for expiration
         import time
+
         time.sleep(1.5)
 
         # Should be gone
@@ -192,7 +192,7 @@ class TestRateLimiting:
         window_seconds = 60
 
         # Simulate requests
-        for i in range(limit):
+        for _i in range(limit):
             current_count = redis_client.incr(window_key)
             if current_count == 1:
                 redis_client.expire(window_key, window_seconds)
@@ -213,8 +213,8 @@ class TestRateLimiting:
         redis_client.setex(window_key, 1, "5")  # 1 second TTL
 
         import time
+
         time.sleep(1.5)
 
         # Should be reset
         assert redis_client.get(window_key) is None
-

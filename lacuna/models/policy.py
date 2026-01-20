@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 
@@ -32,19 +32,19 @@ class PolicyDecision:
 
     # Reasoning
     reasoning: str = ""
-    matched_rules: List[str] = field(default_factory=list)
+    matched_rules: list[str] = field(default_factory=list)
 
     # Alternatives (when denied)
-    alternatives: List[str] = field(default_factory=list)
+    alternatives: list[str] = field(default_factory=list)
 
     # Additional context
-    evaluated_conditions: Dict[str, bool] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    evaluated_conditions: dict[str, bool] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Performance metrics
     evaluation_time_ms: Optional[float] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "allowed": self.allowed,
@@ -62,14 +62,16 @@ class PolicyDecision:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PolicyDecision":
+    def from_dict(cls, data: dict[str, Any]) -> "PolicyDecision":
         """Create from dictionary representation."""
         return cls(
             allowed=data.get("allowed", False),
             decision_id=UUID(data["decision_id"]) if "decision_id" in data else uuid4(),
-            timestamp=datetime.fromisoformat(data["timestamp"])
-            if "timestamp" in data
-            else _utc_now(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if "timestamp" in data
+                else _utc_now()
+            ),
             policy_id=data.get("policy_id"),
             policy_version=data.get("policy_version"),
             policy_name=data.get("policy_name"),
@@ -107,7 +109,7 @@ class PolicyInput:
     # Data classification
     classification_tier: Optional[str] = None  # PROPRIETARY/INTERNAL/PUBLIC
     classification_confidence: Optional[float] = None
-    tags: List[str] = field(default_factory=list)  # PII, PHI, FINANCIAL
+    tags: list[str] = field(default_factory=list)  # PII, PHI, FINANCIAL
 
     # User context
     user_id: Optional[str] = None
@@ -121,15 +123,15 @@ class PolicyInput:
     destination_encrypted: bool = False
 
     # Lineage
-    lineage_chain: List[str] = field(default_factory=list)
+    lineage_chain: list[str] = field(default_factory=list)
 
     # Additional context
     environment: Optional[str] = None  # production, staging, dev
     project: Optional[str] = None
     purpose: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation for OPA."""
         return {
             "action": self.action,
@@ -141,13 +143,15 @@ class PolicyInput:
                 "tags": self.tags,
                 "lineage": self.lineage_chain,
             },
-            "destination": {
-                "path": self.destination,
-                "type": self.destination_type,
-                "encrypted": self.destination_encrypted,
-            }
-            if self.destination
-            else None,
+            "destination": (
+                {
+                    "path": self.destination,
+                    "type": self.destination_type,
+                    "encrypted": self.destination_encrypted,
+                }
+                if self.destination
+                else None
+            ),
             "user": {
                 "id": self.user_id,
                 "role": self.user_role,
@@ -163,7 +167,7 @@ class PolicyInput:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PolicyInput":
+    def from_dict(cls, data: dict[str, Any]) -> "PolicyInput":
         """Create from dictionary representation."""
         source = data.get("source", {})
         destination = data.get("destination", {})
@@ -183,9 +187,9 @@ class PolicyInput:
             user_department=user.get("department"),
             destination=destination.get("path") if destination else None,
             destination_type=destination.get("type") if destination else None,
-            destination_encrypted=destination.get("encrypted", False)
-            if destination
-            else False,
+            destination_encrypted=(
+                destination.get("encrypted", False) if destination else False
+            ),
             lineage_chain=source.get("lineage", []),
             environment=context.get("environment"),
             project=context.get("project"),
@@ -219,13 +223,13 @@ class PolicyEvaluation:
 
     # Error information (if evaluation failed)
     error: Optional[str] = None
-    error_details: Optional[Dict[str, Any]] = None
+    error_details: Optional[dict[str, Any]] = None
 
     # Fallback information
     is_fallback: bool = False
     fallback_reason: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "decision": self.decision.to_dict(),
@@ -241,19 +245,21 @@ class PolicyEvaluation:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PolicyEvaluation":
+    def from_dict(cls, data: dict[str, Any]) -> "PolicyEvaluation":
         """Create from dictionary representation."""
         decision_data = data.get("decision", {})
         policy_input_data = data.get("policy_input")
 
         return cls(
             decision=PolicyDecision.from_dict(decision_data),
-            evaluation_id=UUID(data["evaluation_id"])
-            if "evaluation_id" in data
-            else uuid4(),
-            evaluated_at=datetime.fromisoformat(data["evaluated_at"])
-            if "evaluated_at" in data
-            else _utc_now(),
+            evaluation_id=(
+                UUID(data["evaluation_id"]) if "evaluation_id" in data else uuid4()
+            ),
+            evaluated_at=(
+                datetime.fromisoformat(data["evaluated_at"])
+                if "evaluated_at" in data
+                else _utc_now()
+            ),
             policy_input=(
                 PolicyInput.from_dict(policy_input_data) if policy_input_data else None
             ),
@@ -292,7 +298,7 @@ class PolicyRule:
     description: str
 
     # Rule definition
-    conditions: List[str] = field(default_factory=list)
+    conditions: list[str] = field(default_factory=list)
     action: str = "deny"  # allow or deny
 
     # Priority (higher number = higher priority)
@@ -303,12 +309,12 @@ class PolicyRule:
     created_at: datetime = field(default_factory=_utc_now)
     updated_at: datetime = field(default_factory=_utc_now)
     created_by: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     # Status
     enabled: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "rule_id": self.rule_id,
@@ -326,7 +332,7 @@ class PolicyRule:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PolicyRule":
+    def from_dict(cls, data: dict[str, Any]) -> "PolicyRule":
         """Create from dictionary representation."""
         return cls(
             rule_id=data["rule_id"],
@@ -336,12 +342,16 @@ class PolicyRule:
             action=data.get("action", "deny"),
             priority=data.get("priority", 0),
             version=data.get("version", "1.0.0"),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if "created_at" in data
-            else _utc_now(),
-            updated_at=datetime.fromisoformat(data["updated_at"])
-            if "updated_at" in data
-            else _utc_now(),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else _utc_now()
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if "updated_at" in data
+                else _utc_now()
+            ),
             created_by=data.get("created_by"),
             tags=data.get("tags", []),
             enabled=data.get("enabled", True),

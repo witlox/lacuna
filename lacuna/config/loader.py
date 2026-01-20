@@ -1,7 +1,7 @@
 """Configuration loader for YAML files."""
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
@@ -19,7 +19,7 @@ class ConfigLoader:
         if not self.config_dir.exists():
             self.config_dir.mkdir(parents=True, exist_ok=True)
 
-    def load(self, filename: str) -> Dict[str, Any]:
+    def load(self, filename: str) -> dict[str, Any]:
         """Load a single configuration file.
 
         Args:
@@ -35,7 +35,7 @@ class ConfigLoader:
         with open(config_file) as f:
             return yaml.safe_load(f) or {}
 
-    def load_all(self) -> Dict[str, Any]:
+    def load_all(self) -> dict[str, Any]:
         """Load all configuration files and merge them.
 
         Returns:
@@ -56,8 +56,8 @@ class ConfigLoader:
         return config
 
     def _deep_merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, base: dict[str, Any], override: dict[str, Any]
+    ) -> dict[str, Any]:
         """Deep merge two dictionaries.
 
         Args:
@@ -70,14 +70,18 @@ class ConfigLoader:
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
 
         return result
 
-    def save(self, filename: str, config: Dict[str, Any]) -> None:
+    def save(self, filename: str, config: dict[str, Any]) -> None:
         """Save configuration to a YAML file.
 
         Args:

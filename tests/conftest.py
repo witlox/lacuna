@@ -1,8 +1,9 @@
 """Test configuration and fixtures."""
 
 import os
+from collections.abc import Generator
+
 import pytest
-from typing import Generator
 
 from lacuna.config.settings import Settings
 from lacuna.models.classification import Classification, ClassificationContext, DataTier
@@ -12,17 +13,22 @@ from lacuna.models.data_operation import DataOperation, OperationType, UserConte
 def pytest_configure(config):
     """Configure pytest with custom markers."""
     config.addinivalue_line(
-        "markers", "integration: mark test as integration test (requires external services)"
+        "markers",
+        "integration: mark test as integration test (requires external services)",
     )
 
 
 def pytest_collection_modifyitems(config, items):
     """Skip integration tests unless explicitly requested."""
     # Check if we're running integration tests
-    run_integration = os.environ.get("LACUNA_RUN_INTEGRATION_TESTS", "").lower() == "true"
+    run_integration = (
+        os.environ.get("LACUNA_RUN_INTEGRATION_TESTS", "").lower() == "true"
+    )
 
     if not run_integration:
-        skip_integration = pytest.mark.skip(reason="Integration tests skipped (set LACUNA_RUN_INTEGRATION_TESTS=true to run)")
+        skip_integration = pytest.mark.skip(
+            reason="Integration tests skipped (set LACUNA_RUN_INTEGRATION_TESTS=true to run)"
+        )
         for item in items:
             if "integration" in item.keywords:
                 item.add_marker(skip_integration)
@@ -71,4 +77,3 @@ def sample_operation() -> DataOperation:
         user=UserContext(user_id="test-user", user_role="analyst"),
         purpose="Test export",
     )
-

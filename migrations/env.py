@@ -2,20 +2,13 @@
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+from lacuna.config import get_settings
 
 # Import your models so Alembic can detect them
 from lacuna.db.base import Base
-from lacuna.db.models import (
-    AuditLogModel,
-    ClassificationModel,
-    LineageEdgeModel,
-    PolicyEvaluationModel,
-)
-from lacuna.config import get_settings
 
 # this is the Alembic Config object
 config = context.config
@@ -68,9 +61,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
@@ -80,4 +71,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

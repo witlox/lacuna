@@ -1,14 +1,14 @@
 """Audit API endpoints."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lacuna.api.app import get_engine
 from lacuna.engine.governance import GovernanceEngine
-from lacuna.models.audit import EventType, Severity
+from lacuna.models.audit import EventType
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ class AuditRecordResponse(BaseModel):
 class AuditQueryResponse(BaseModel):
     """Response model for audit queries."""
 
-    records: List[AuditRecordResponse]
+    records: list[AuditRecordResponse]
     total: int
     offset: int
     limit: int
@@ -56,7 +56,7 @@ async def query_audit_logs(
     """
     try:
         # Build query parameters
-        query_params: Dict[str, Any] = {
+        query_params: dict[str, Any] = {
             "limit": limit,
             "offset": offset,
         }
@@ -103,7 +103,7 @@ async def query_audit_logs(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class IntegrityVerificationResponse(BaseModel):
@@ -111,7 +111,7 @@ class IntegrityVerificationResponse(BaseModel):
 
     verified: bool
     records_checked: int
-    errors: List[Dict[str, Any]]
+    errors: list[dict[str, Any]]
     message: str
     first_record: Optional[str] = None
     last_record: Optional[str] = None
@@ -143,16 +143,16 @@ async def verify_audit_integrity(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class AuditStatsResponse(BaseModel):
     """Response model for audit statistics."""
 
     total_records: int
-    by_event_type: Dict[str, int]
-    by_action_result: Dict[str, int]
-    by_classification: Dict[str, int]
+    by_event_type: dict[str, int]
+    by_action_result: dict[str, int]
+    by_classification: dict[str, int]
 
 
 @router.get("/audit/stats", response_model=AuditStatsResponse)
@@ -176,5 +176,4 @@ async def get_audit_stats(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=str(e)) from e

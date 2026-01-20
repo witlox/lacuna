@@ -214,4 +214,3 @@ class TestPolicyEngine:
         assert "enabled" in stats
         assert "opa_available" in stats
         assert "cache_size" in stats
-

@@ -1,22 +1,23 @@
 """Database connection and session management."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
+from typing import Any, Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from lacuna.config import get_settings
 
 # Base class for all database models
-Base = declarative_base()
+Base: Any = declarative_base()
 
 # Global engine and session factory
-_engine = None
-_SessionLocal = None
+_engine: Optional[Engine] = None
+_SessionLocal: Optional[sessionmaker] = None
 
 
-def get_engine():
+def get_engine() -> Engine:
     """Get or create database engine."""
     global _engine
     if _engine is None:
@@ -31,7 +32,7 @@ def get_engine():
     return _engine
 
 
-def get_session_factory():
+def get_session_factory() -> sessionmaker:
     """Get or create session factory."""
     global _SessionLocal
     if _SessionLocal is None:

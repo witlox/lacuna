@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -88,9 +88,7 @@ class PolicySettings(BaseSettings):
     """Policy engine configuration."""
 
     enabled: bool = Field(default=False, description="Enable policy engine")
-    opa_endpoint: Optional[str] = Field(
-        default=None, description="OPA server endpoint"
-    )
+    opa_endpoint: Optional[str] = Field(default=None, description="OPA server endpoint")
     opa_policy_path: str = Field(
         default="lacuna/classification", description="OPA policy path"
     )
@@ -145,14 +143,14 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
-    log_format: str = Field(
-        default="json", description="Log format: json or text"
-    )
+    log_format: str = Field(default="json", description="Log format: json or text")
 
     # API settings
     api_host: str = Field(default="0.0.0.0", description="API host")
     api_port: int = Field(default=8000, description="API port")
-    api_key: Optional[str] = Field(default=None, description="API key for authentication")
+    api_key: Optional[str] = Field(
+        default=None, description="API key for authentication"
+    )
 
     # Component settings
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
@@ -167,9 +165,9 @@ class Settings(BaseSettings):
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
 
     # Proprietary terms
-    proprietary_projects: List[str] = Field(default_factory=list)
-    proprietary_customers: List[str] = Field(default_factory=list)
-    proprietary_terms: List[str] = Field(default_factory=list)
+    proprietary_projects: list[str] = Field(default_factory=list)
+    proprietary_customers: list[str] = Field(default_factory=list)
+    proprietary_terms: list[str] = Field(default_factory=list)
 
     @field_validator("config_path", "data_path", "models_path")
     @classmethod
@@ -180,13 +178,13 @@ class Settings(BaseSettings):
         return v
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()
 
 
-def load_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
+def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
     """Load configuration from YAML files."""
     import yaml
 

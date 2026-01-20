@@ -1,8 +1,9 @@
 """Tests for data models."""
 
-import pytest
 from datetime import datetime
 from uuid import uuid4
+
+import pytest
 
 from lacuna.models.classification import (
     Classification,
@@ -152,4 +153,3 @@ class TestDataOperation:
         assert data["operation_type"] == "export"
         assert data["destination"] == "/tmp/export.csv"
         assert data["user"]["user_id"] == "user"
-

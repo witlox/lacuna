@@ -1,7 +1,6 @@
 """SQLAlchemy database models for Lacuna."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -167,7 +166,9 @@ class AuditLogModel(Base):
         Index("idx_audit_timestamp", "timestamp"),
         Index("idx_audit_user_timestamp", "user_id", "timestamp"),
         Index("idx_audit_resource_timestamp", "resource_id", "timestamp"),
-        Index("idx_audit_classification_timestamp", "resource_classification", "timestamp"),
+        Index(
+            "idx_audit_classification_timestamp", "resource_classification", "timestamp"
+        ),
         Index("idx_audit_tags", "resource_tags", postgresql_using="gin"),
         Index("idx_audit_event_type", "event_type", "timestamp"),
         Index("idx_audit_action_result", "action_result", "timestamp"),

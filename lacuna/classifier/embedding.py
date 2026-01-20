@@ -1,6 +1,6 @@
 """Embedding-based classifier using semantic similarity."""
 
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -20,7 +20,7 @@ class EmbeddingClassifier(Classifier):
     def __init__(
         self,
         model_name: Optional[str] = None,
-        examples_by_tier: Optional[Dict[DataTier, List[str]]] = None,
+        examples_by_tier: Optional[dict[DataTier, list[str]]] = None,
         threshold: float = 0.75,
         priority: int = 70,
     ):
@@ -39,14 +39,14 @@ class EmbeddingClassifier(Classifier):
         self.threshold = threshold
         self.model = None
         self.examples_by_tier = examples_by_tier or self._default_examples()
-        self.example_embeddings: Dict[DataTier, np.ndarray] = {}
+        self.example_embeddings: dict[DataTier, np.ndarray] = {}
 
     @property
     def name(self) -> str:
         """Get classifier name."""
         return "EmbeddingClassifier"
 
-    def _default_examples(self) -> Dict[DataTier, List[str]]:
+    def _default_examples(self) -> dict[DataTier, list[str]]:
         """Get default example queries for each tier."""
         return {
             DataTier.PROPRIETARY: [
@@ -87,15 +87,15 @@ class EmbeddingClassifier(Classifier):
 
             # Precompute example embeddings
             for tier, examples in self.examples_by_tier.items():
-                embeddings = self.model.encode(examples, convert_to_numpy=True)
+                embeddings = self.model.encode(examples, convert_to_numpy=True)  # type: ignore[attr-defined]
                 # Average embeddings for this tier
                 self.example_embeddings[tier] = np.mean(embeddings, axis=0)
 
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "sentence-transformers not installed. "
                 "Install with: pip install sentence-transformers"
-            )
+            ) from err
 
     def classify(
         self, query: str, context: Optional[ClassificationContext] = None
@@ -150,14 +150,14 @@ class EmbeddingClassifier(Classifier):
             classifier_name=self.name,
             classifier_version="1.0.0",
             metadata={
-                "similarities": {tier.value: float(sim) for tier, sim in similarities.items()},
+                "similarities": {
+                    tier.value: float(sim) for tier, sim in similarities.items()
+                },
                 "model": self.model_name,
             },
         )
 
-    def _cosine_similarity(
-        self, vec1: np.ndarray, vec2: np.ndarray
-    ) -> float:
+    def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         """Compute cosine similarity between two vectors.
 
         Args:
@@ -176,7 +176,7 @@ class EmbeddingClassifier(Classifier):
 
         return float(dot_product / (norm1 * norm2))
 
-    def add_examples(self, tier: DataTier, examples: List[str]) -> None:
+    def add_examples(self, tier: DataTier, examples: list[str]) -> None:
         """Add training examples for a tier.
 
         Args:

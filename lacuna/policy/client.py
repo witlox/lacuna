@@ -1,7 +1,7 @@
 """OPA (Open Policy Agent) client for policy evaluation."""
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import requests
 import structlog
@@ -63,9 +63,9 @@ class OPAClient:
 
     def evaluate(
         self,
-        input_data: Dict[str, Any],
+        input_data: dict[str, Any],
         policy_path: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Evaluate a policy against input data.
 
         Args:
@@ -111,8 +111,8 @@ class OPAClient:
             return None
 
     def evaluate_classification(
-        self, input_data: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, input_data: dict[str, Any]
+    ) -> Optional[dict[str, Any]]:
         """Evaluate classification policy.
 
         Args:
@@ -123,7 +123,7 @@ class OPAClient:
         """
         return self.evaluate(input_data, f"{self.policy_path}/classification")
 
-    def evaluate_export(self, input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def evaluate_export(self, input_data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Evaluate export policy.
 
         Args:
@@ -134,7 +134,7 @@ class OPAClient:
         """
         return self.evaluate(input_data, f"{self.policy_path}/export")
 
-    def get_policies(self) -> Optional[Dict[str, Any]]:
+    def get_policies(self) -> Optional[dict[str, Any]]:
         """Get all loaded policies.
 
         Returns:
@@ -225,4 +225,3 @@ class OPAClient:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.close()
-

@@ -2,8 +2,8 @@
 
 import pytest
 
-from lacuna.classifier.pipeline import ClassificationPipeline
 from lacuna.classifier.heuristic import HeuristicClassifier
+from lacuna.classifier.pipeline import ClassificationPipeline
 from lacuna.models.classification import Classification, ClassificationContext, DataTier
 
 
@@ -84,7 +84,7 @@ class TestHeuristicClassifier:
         """Test that ambiguous queries return None for fallback."""
         classifier = HeuristicClassifier()
         # A query with no clear indicators
-        result = classifier.classify("hello")
+        _result = classifier.classify("hello")
 
         # May return None to allow next classifier
         # or may return a low-confidence result
@@ -152,4 +152,3 @@ class TestClassificationPipeline:
         assert "classifiers" in stats
         assert "cache_size" in stats
         assert "confidence_threshold" in stats
-

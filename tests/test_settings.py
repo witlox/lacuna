@@ -1,23 +1,23 @@
 """Tests for configuration settings."""
 
 import os
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 import yaml
 
 from lacuna.config.settings import (
-    Settings,
-    DatabaseSettings,
-    RedisSettings,
-    ClassificationSettings,
-    LineageSettings,
     AuditSettings,
-    PolicySettings,
+    ClassificationSettings,
+    DatabaseSettings,
+    LineageSettings,
     MonitoringSettings,
+    PolicySettings,
+    RedisSettings,
     RoutingSettings,
+    Settings,
     get_settings,
     load_config,
 )
@@ -195,7 +195,7 @@ class TestMainSettings:
         """Test that paths are created if they don't exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
             new_config_path = Path(tmpdir) / "new_config"
-            settings = Settings(config_path=new_config_path)
+            _settings = Settings(config_path=new_config_path)
 
             assert new_config_path.exists()
 
@@ -306,10 +306,13 @@ class TestEnvironmentVariables:
     def test_env_override(self) -> None:
         """Test environment variable overrides."""
         # Set environment variable
-        with patch.dict(os.environ, {
-            "LACUNA_ENVIRONMENT": "production",
-            "LACUNA_DEBUG": "true",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "LACUNA_ENVIRONMENT": "production",
+                "LACUNA_DEBUG": "true",
+            },
+        ):
             # Clear cache to pick up new env vars
             get_settings.cache_clear()
 
@@ -320,14 +323,16 @@ class TestEnvironmentVariables:
 
     def test_nested_env_override(self) -> None:
         """Test nested environment variable overrides."""
-        with patch.dict(os.environ, {
-            "LACUNA_DATABASE__POOL_SIZE": "100",
-            "LACUNA_REDIS__ENABLED": "false",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "LACUNA_DATABASE__POOL_SIZE": "100",
+                "LACUNA_REDIS__ENABLED": "false",
+            },
+        ):
             get_settings.cache_clear()
 
-            settings = Settings()
+            _settings = Settings()
 
             # Note: nested overrides via env may need specific format
             # This test verifies the mechanism exists
-

@@ -1,9 +1,10 @@
 """End-to-end integration tests for the Lacuna API."""
 
-import pytest
-import requests
 import time
 from typing import Optional
+
+import pytest
+import requests
 
 pytestmark = pytest.mark.integration
 
@@ -15,6 +16,7 @@ class TestAPIHealth:
     def api_base_url(self) -> str:
         """Get API base URL."""
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_health_endpoint(self, api_base_url):
@@ -48,6 +50,7 @@ class TestClassificationAPI:
     @pytest.fixture(scope="class")
     def api_base_url(self) -> str:
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_classify_proprietary_query(self, api_base_url):
@@ -58,7 +61,7 @@ class TestClassificationAPI:
                 "query": "What are the customer payment details?",
                 "project": "analytics",
                 "user_id": "test-user",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -75,7 +78,7 @@ class TestClassificationAPI:
             json={
                 "query": "What is machine learning?",
                 "user_id": "test-user",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -94,7 +97,7 @@ class TestClassificationAPI:
                 "user_id": "analyst@company.com",
                 "user_role": "analyst",
                 "environment": "production",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -114,7 +117,7 @@ class TestClassificationAPI:
                     "Internal deployment schedule",
                 ],
                 "user_id": "test-user",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -131,6 +134,7 @@ class TestEvaluationAPI:
     @pytest.fixture(scope="class")
     def api_base_url(self) -> str:
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_evaluate_read_operation(self, api_base_url):
@@ -142,7 +146,7 @@ class TestEvaluationAPI:
                 "resource_type": "table",
                 "resource_id": "public.products",
                 "user_id": "analyst@company.com",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -164,7 +168,7 @@ class TestEvaluationAPI:
                 "resource_tags": ["PII"],
                 "destination": "~/Downloads/export.csv",
                 "user_id": "analyst@company.com",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -190,7 +194,7 @@ class TestEvaluationAPI:
                 "purpose": "Create customer analytics summary",
                 "environment": "production",
                 "project": "customer-360",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -207,6 +211,7 @@ class TestLineageAPI:
     @pytest.fixture(scope="class")
     def api_base_url(self) -> str:
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_track_lineage(self, api_base_url):
@@ -219,7 +224,7 @@ class TestLineageAPI:
                 "destination": "combined_output.csv",
                 "user_id": "analyst@company.com",
                 "transformation_description": "Join sources A and B",
-            }
+            },
         )
 
         assert response.status_code in [200, 201]
@@ -252,6 +257,7 @@ class TestAuditAPI:
     @pytest.fixture(scope="class")
     def api_base_url(self) -> str:
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_query_audit_logs(self, api_base_url):
@@ -260,7 +266,7 @@ class TestAuditAPI:
             f"{api_base_url}/api/v1/audit/logs",
             params={
                 "limit": 10,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -275,7 +281,7 @@ class TestAuditAPI:
             params={
                 "user_id": "test-user",
                 "limit": 10,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -287,7 +293,7 @@ class TestAuditAPI:
             params={
                 "event_type": "policy.deny",
                 "limit": 10,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -299,6 +305,7 @@ class TestAPIPerformance:
     @pytest.fixture(scope="class")
     def api_base_url(self) -> str:
         import os
+
         return os.environ.get("LACUNA_API_URL", "http://localhost:8000")
 
     def test_classification_latency(self, api_base_url):
@@ -310,7 +317,7 @@ class TestAPIPerformance:
             json={
                 "query": "Quick classification test",
                 "user_id": "perf-test",
-            }
+            },
         )
 
         latency_ms = (time.time() - start) * 1000
@@ -326,7 +333,7 @@ class TestAPIPerformance:
         def classify(query: str):
             return requests.post(
                 f"{api_base_url}/api/v1/classify",
-                json={"query": query, "user_id": "concurrent-test"}
+                json={"query": query, "user_id": "concurrent-test"},
             )
 
         queries = [f"Test query {i}" for i in range(10)]
@@ -337,4 +344,3 @@ class TestAPIPerformance:
 
         # All requests should succeed
         assert all(r.status_code == 200 for r in results)
-

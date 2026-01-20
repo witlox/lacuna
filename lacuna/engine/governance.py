@@ -1,7 +1,7 @@
 """Main governance engine orchestrating all components."""
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import structlog
 
@@ -96,7 +96,9 @@ class GovernanceEngine:
             classification_start = time.time()
             classification = self._classify_operation(operation, context)
             result.classification = classification
-            result.classification_latency_ms = (time.time() - classification_start) * 1000
+            result.classification_latency_ms = (
+                time.time() - classification_start
+            ) * 1000
 
             # Step 2: Apply lineage-based inheritance
             if operation.lineage_chain or operation.sources:
@@ -279,7 +281,7 @@ class GovernanceEngine:
         ]
         return any(destination.startswith(p) for p in encrypted_patterns)
 
-    def get_lineage(self, artifact_id: str) -> Dict[str, Any]:
+    def get_lineage(self, artifact_id: str) -> dict[str, Any]:
         """Get lineage information for an artifact.
 
         Args:
@@ -299,7 +301,7 @@ class GovernanceEngine:
         """Get downstream dependents of an artifact."""
         return self._lineage_tracker.get_downstream(artifact_id)
 
-    def verify_audit_integrity(self) -> Dict[str, Any]:
+    def verify_audit_integrity(self) -> dict[str, Any]:
         """Verify audit log integrity.
 
         Returns:
@@ -307,7 +309,7 @@ class GovernanceEngine:
         """
         return self._audit_logger.verify_integrity()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get governance engine statistics.
 
         Returns:
@@ -335,4 +337,3 @@ class GovernanceEngine:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.stop()
-

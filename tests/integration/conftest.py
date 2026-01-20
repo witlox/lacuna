@@ -1,10 +1,11 @@
 """Pytest fixtures for integration tests."""
 
 import os
+from collections.abc import Generator
+
 import pytest
-from typing import Generator
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 # Check if we're running in integration test mode
 INTEGRATION_TEST = os.environ.get("LACUNA_DATABASE_URL") is not None
@@ -13,7 +14,8 @@ INTEGRATION_TEST = os.environ.get("LACUNA_DATABASE_URL") is not None
 def pytest_configure(config):
     """Register custom markers."""
     config.addinivalue_line(
-        "markers", "integration: mark test as integration test requiring external services"
+        "markers",
+        "integration: mark test as integration test requiring external services",
     )
 
 
@@ -22,7 +24,7 @@ def database_url() -> str:
     """Get database URL from environment."""
     url = os.environ.get(
         "LACUNA_DATABASE_URL",
-        "postgresql://lacuna_test:lacuna_test@localhost:5433/lacuna_test"
+        "postgresql://lacuna_test:lacuna_test@localhost:5433/lacuna_test",
     )
     return url
 
@@ -30,19 +32,13 @@ def database_url() -> str:
 @pytest.fixture(scope="session")
 def redis_url() -> str:
     """Get Redis URL from environment."""
-    return os.environ.get(
-        "LACUNA_REDIS_URL",
-        "redis://localhost:6380/0"
-    )
+    return os.environ.get("LACUNA_REDIS_URL", "redis://localhost:6380/0")
 
 
 @pytest.fixture(scope="session")
 def opa_endpoint() -> str:
     """Get OPA endpoint from environment."""
-    return os.environ.get(
-        "LACUNA_POLICY_OPA_ENDPOINT",
-        "http://localhost:8182"
-    )
+    return os.environ.get("LACUNA_POLICY_OPA_ENDPOINT", "http://localhost:8182")
 
 
 @pytest.fixture(scope="session")
@@ -75,8 +71,8 @@ def db_session(db_engine) -> Generator[Session, None, None]:
 @pytest.fixture(scope="session")
 def setup_database(db_engine):
     """Set up database schema for tests."""
-    from lacuna.db.base import Base
     from lacuna.db import models  # Import models to register them
+    from lacuna.db.base import Base
 
     # Create all tables
     Base.metadata.create_all(bind=db_engine)
@@ -107,4 +103,3 @@ def opa_client(opa_endpoint: str):
 
     client = OPAClient(endpoint=opa_endpoint)
     return client
-

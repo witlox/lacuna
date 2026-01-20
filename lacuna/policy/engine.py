@@ -1,7 +1,7 @@
 """Policy engine for evaluating data governance policies."""
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import structlog
 
@@ -43,7 +43,7 @@ class PolicyEngine:
         self.fallback_on_error = fallback_on_error
 
         self._opa_client = opa_client or OPAClient()
-        self._cache: Dict[str, PolicyDecision] = {}
+        self._cache: dict[str, PolicyDecision] = {}
         self._cache_ttl = 300  # 5 minutes
 
     def evaluate(
@@ -164,14 +164,16 @@ class PolicyEngine:
             purpose=operation.purpose,
         )
 
-    def _parse_opa_result(self, result: Dict[str, Any]) -> PolicyDecision:
+    def _parse_opa_result(self, result: dict[str, Any]) -> PolicyDecision:
         """Parse OPA evaluation result into PolicyDecision."""
         # Handle different OPA response formats
 
         # Format 1: Direct allow/deny
         if "allow" in result:
             allowed = result["allow"]
-            reasoning = result.get("reason", result.get("reasoning", "Policy evaluated"))
+            reasoning = result.get(
+                "reason", result.get("reasoning", "Policy evaluated")
+            )
             alternatives = result.get("alternatives", [])
 
             return PolicyDecision(
@@ -251,7 +253,7 @@ class PolicyEngine:
         self,
         operation: DataOperation,
         tier: DataTier,
-        tags: List[str],
+        tags: list[str],
     ) -> PolicyDecision:
         """Evaluate export-specific policies."""
         destination = operation.destination or ""
@@ -268,7 +270,9 @@ class PolicyEngine:
 
             for pattern in unmanaged_patterns:
                 if pattern.lower() in destination.lower():
-                    pii_columns = [t for t in tags if t in ("PII", "PHI", "SSN", "EMAIL")]
+                    pii_columns = [
+                        t for t in tags if t in ("PII", "PHI", "SSN", "EMAIL")
+                    ]
 
                     return PolicyDecision(
                         allowed=False,
@@ -285,7 +289,13 @@ class PolicyEngine:
 
             # Check encryption for external destinations
             if not operation.destination_encrypted:
-                external_patterns = ["s3://", "gs://", "azure://", "http://", "https://"]
+                external_patterns = [
+                    "s3://",
+                    "gs://",
+                    "azure://",
+                    "http://",
+                    "https://",
+                ]
                 for pattern in external_patterns:
                     if destination.startswith(pattern):
                         return PolicyDecision(
@@ -321,7 +331,7 @@ class PolicyEngine:
         self,
         operation: DataOperation,
         tier: DataTier,
-        tags: List[str],
+        tags: list[str],
     ) -> PolicyDecision:
         """Evaluate write-specific policies."""
         # For now, allow writes with logging
@@ -348,7 +358,7 @@ class PolicyEngine:
         self._cache.clear()
         logger.info("policy_cache_cleared")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get policy engine statistics."""
         return {
             "enabled": self.enabled,
@@ -356,4 +366,3 @@ class PolicyEngine:
             "cache_size": len(self._cache),
             "fallback_on_error": self.fallback_on_error,
         }
-

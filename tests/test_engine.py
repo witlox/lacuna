@@ -120,4 +120,3 @@ class TestGovernanceEngine:
         with GovernanceEngine() as engine:
             result = engine.evaluate_query("test query", user_id="test")
             assert result is not None
-

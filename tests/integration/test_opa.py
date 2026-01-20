@@ -289,4 +289,3 @@ class TestOPAClient:
 
         # Result should be a dictionary
         assert isinstance(result, dict)
-

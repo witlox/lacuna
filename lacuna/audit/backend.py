@@ -1,16 +1,13 @@
 """Audit storage backend for PostgreSQL."""
 
-import hashlib
-import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Any, Optional
 
 import structlog
-from sqlalchemy import and_, desc
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from lacuna.db.base import get_session, session_scope
+from lacuna.db.base import session_scope
 from lacuna.db.models import AuditLogModel
 from lacuna.models.audit import AuditQuery, AuditRecord, EventType, Severity
 
@@ -110,7 +107,7 @@ class AuditBackend:
                 record_hash=record.record_hash[:16] + "...",
             )
 
-    def write_batch(self, records: List[AuditRecord]) -> None:
+    def write_batch(self, records: list[AuditRecord]) -> None:
         """Write multiple audit records in a batch.
 
         Args:
@@ -168,7 +165,7 @@ class AuditBackend:
                 count=len(records),
             )
 
-    def query(self, query: AuditQuery) -> List[AuditRecord]:
+    def query(self, query: AuditQuery) -> list[AuditRecord]:
         """Query audit records.
 
         Args:
@@ -199,7 +196,8 @@ class AuditBackend:
                 q = q.filter(AuditLogModel.action_result == query.action_result)
             if query.resource_classification:
                 q = q.filter(
-                    AuditLogModel.resource_classification == query.resource_classification
+                    AuditLogModel.resource_classification
+                    == query.resource_classification
                 )
 
             # Sorting
@@ -219,7 +217,7 @@ class AuditBackend:
         self,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Verify the integrity of the hash chain.
 
         Args:
@@ -253,25 +251,29 @@ class AuditBackend:
             for i, model in enumerate(records):
                 # Check previous hash linkage
                 if i > 0 and model.previous_record_hash != previous_hash:
-                    errors.append({
-                        "event_id": str(model.event_id),
-                        "timestamp": model.timestamp.isoformat(),
-                        "error": "Hash chain broken - previous hash mismatch",
-                        "expected": previous_hash,
-                        "actual": model.previous_record_hash,
-                    })
+                    errors.append(
+                        {
+                            "event_id": str(model.event_id),
+                            "timestamp": model.timestamp.isoformat(),
+                            "error": "Hash chain broken - previous hash mismatch",
+                            "expected": previous_hash,
+                            "actual": model.previous_record_hash,
+                        }
+                    )
 
                 # Verify record hash
                 record = self._model_to_record(model)
                 expected_hash = record.compute_hash()
                 if expected_hash != model.record_hash:
-                    errors.append({
-                        "event_id": str(model.event_id),
-                        "timestamp": model.timestamp.isoformat(),
-                        "error": "Record hash mismatch - possible tampering",
-                        "expected": expected_hash,
-                        "actual": model.record_hash,
-                    })
+                    errors.append(
+                        {
+                            "event_id": str(model.event_id),
+                            "timestamp": model.timestamp.isoformat(),
+                            "error": "Record hash mismatch - possible tampering",
+                            "expected": expected_hash,
+                            "actual": model.record_hash,
+                        }
+                    )
 
                 previous_hash = model.record_hash
 
@@ -338,4 +340,3 @@ class AuditBackend:
             system_id=model.system_id,
             system_version=model.system_version,
         )
-

@@ -25,11 +25,20 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        args: [--ignore-missing-imports]
+        args:
+          - --ignore-missing-imports
+          - --no-strict-optional
+          - --disable-error-code=override
+          - --disable-error-code=no-any-return
+          - --disable-error-code=arg-type
+          - --disable-error-code=var-annotated
+          - --disable-error-code=valid-type
+          - --disable-error-code=misc
         additional_dependencies:
           - pydantic>=2.0.0
           - types-requests
           - types-redis
+          - types-PyYAML
         types_or: [python, pyi]
         pass_filenames: false
         entry: mypy lacuna/

@@ -1,6 +1,6 @@
 """Classification API endpoints."""
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -19,8 +19,10 @@ class ClassifyRequest(BaseModel):
     project: Optional[str] = Field(None, description="Project context")
     user_id: Optional[str] = Field(None, description="User identifier")
     user_role: Optional[str] = Field(None, description="User role")
-    environment: Optional[str] = Field(None, description="Environment (dev/staging/prod)")
-    conversation: Optional[List[Dict[str, str]]] = Field(
+    environment: Optional[str] = Field(
+        None, description="Environment (dev/staging/prod)"
+    )
+    conversation: Optional[list[dict[str, str]]] = Field(
         None, description="Previous conversation messages"
     )
 
@@ -28,12 +30,16 @@ class ClassifyRequest(BaseModel):
 class ClassifyResponse(BaseModel):
     """Response model for classification."""
 
-    tier: str = Field(..., description="Classification tier (PROPRIETARY/INTERNAL/PUBLIC)")
+    tier: str = Field(
+        ..., description="Classification tier (PROPRIETARY/INTERNAL/PUBLIC)"
+    )
     confidence: float = Field(..., description="Classification confidence (0.0-1.0)")
     reasoning: str = Field(..., description="Explanation for classification")
-    tags: List[str] = Field(default_factory=list, description="Data tags (PII, PHI, etc.)")
+    tags: list[str] = Field(
+        default_factory=list, description="Data tags (PII, PHI, etc.)"
+    )
     classifier: str = Field(..., description="Classifier that made the decision")
-    latency_ms: Optional[float] = Field(None, description="Classification latency")
+    latency_ms: float = Field(default=0.0, description="Classification latency")
 
 
 @router.post("/classify", response_model=ClassifyResponse)
@@ -55,6 +61,7 @@ async def classify(
 
     try:
         import time
+
         start = time.time()
 
         classification = engine.classify(request.query, context)
@@ -71,13 +78,13 @@ async def classify(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class BatchClassifyRequest(BaseModel):
     """Request model for batch classification."""
 
-    queries: List[str] = Field(..., description="List of queries to classify")
+    queries: list[str] = Field(..., description="List of queries to classify")
     project: Optional[str] = Field(None, description="Project context")
     user_id: Optional[str] = Field(None, description="User identifier")
 
@@ -85,7 +92,7 @@ class BatchClassifyRequest(BaseModel):
 class BatchClassifyResponse(BaseModel):
     """Response model for batch classification."""
 
-    results: List[ClassifyResponse]
+    results: list[ClassifyResponse]
     total_latency_ms: float
 
 
@@ -96,6 +103,7 @@ async def classify_batch(
 ) -> BatchClassifyResponse:
     """Classify multiple queries in a batch."""
     import time
+
     start = time.time()
 
     results = []
@@ -120,4 +128,3 @@ async def classify_batch(
         results=results,
         total_latency_ms=round((time.time() - start) * 1000, 2),
     )
-

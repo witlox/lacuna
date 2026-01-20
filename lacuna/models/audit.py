@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 
@@ -91,12 +91,12 @@ class AuditRecord:
     resource_type: str = "unknown"  # dataset, table, file, query
     resource_id: str = ""
     resource_classification: Optional[str] = None  # PROPRIETARY/INTERNAL/PUBLIC
-    resource_tags: List[str] = field(default_factory=list)  # PII, PHI, FINANCIAL
+    resource_tags: list[str] = field(default_factory=list)  # PII, PHI, FINANCIAL
 
     # Action Details (A.12.4.1)
     action: str = ""  # read, write, classify, export
     action_result: str = ""  # success, denied, error
-    action_metadata: Dict[str, Any] = field(default_factory=dict)
+    action_metadata: dict[str, Any] = field(default_factory=dict)
 
     # Policy/Governance
     policy_id: Optional[str] = None
@@ -107,10 +107,10 @@ class AuditRecord:
 
     # Lineage/Provenance
     parent_event_id: Optional[UUID] = None
-    lineage_chain: List[str] = field(default_factory=list)
+    lineage_chain: list[str] = field(default_factory=list)
 
     # Compliance Metadata (A.18.1)
-    compliance_flags: List[str] = field(default_factory=list)  # GDPR, HIPAA, SOX
+    compliance_flags: list[str] = field(default_factory=list)  # GDPR, HIPAA, SOX
     retention_period_days: int = 2555  # 7 years default
 
     # Tamper Detection (A.12.4.2)
@@ -124,9 +124,9 @@ class AuditRecord:
     environment: Optional[str] = None  # production, staging, dev
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "event_id": str(self.event_id),
@@ -151,7 +151,9 @@ class AuditRecord:
             "classification_tier": self.classification_tier,
             "classification_confidence": self.classification_confidence,
             "classification_reasoning": self.classification_reasoning,
-            "parent_event_id": str(self.parent_event_id) if self.parent_event_id else None,
+            "parent_event_id": (
+                str(self.parent_event_id) if self.parent_event_id else None
+            ),
             "lineage_chain": self.lineage_chain,
             "compliance_flags": self.compliance_flags,
             "retention_period_days": self.retention_period_days,
@@ -165,13 +167,15 @@ class AuditRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuditRecord":
+    def from_dict(cls, data: dict[str, Any]) -> "AuditRecord":
         """Create from dictionary representation."""
         return cls(
             event_id=UUID(data["event_id"]) if "event_id" in data else uuid4(),
-            timestamp=datetime.fromisoformat(data["timestamp"])
-            if "timestamp" in data
-            else _utc_now(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if "timestamp" in data
+                else _utc_now()
+            ),
             event_type=EventType(data.get("event_type", "data.access")),
             severity=Severity(data.get("severity", "INFO")),
             user_id=data.get("user_id", ""),
@@ -240,14 +244,15 @@ class AuditRecord:
         sensitive_classifications = {"PROPRIETARY"}
         sensitive_tags = {"PII", "PHI", "FINANCIAL", "CONFIDENTIAL"}
 
-        return (
-            self.resource_classification in sensitive_classifications
-            or bool(sensitive_tags.intersection(set(self.resource_tags)))
+        return self.resource_classification in sensitive_classifications or bool(
+            sensitive_tags.intersection(set(self.resource_tags))
         )
 
     def is_policy_violation(self) -> bool:
         """Check if this event represents a policy violation."""
-        return self.action_result == "denied" or self.event_type == EventType.POLICY_DENY
+        return (
+            self.action_result == "denied" or self.event_type == EventType.POLICY_DENY
+        )
 
     def is_administrative_action(self) -> bool:
         """Check if this is an administrative event (A.12.4.3)."""
@@ -276,16 +281,16 @@ class AuditQuery:
     # Filters
     user_id: Optional[str] = None
     resource_id: Optional[str] = None
-    event_types: List[EventType] = field(default_factory=list)
-    severities: List[Severity] = field(default_factory=list)
+    event_types: list[EventType] = field(default_factory=list)
+    severities: list[Severity] = field(default_factory=list)
     action_result: Optional[str] = None  # success, denied, error
 
     # Classification filters
     resource_classification: Optional[str] = None
-    resource_tags: List[str] = field(default_factory=list)
+    resource_tags: list[str] = field(default_factory=list)
 
     # Compliance filters
-    compliance_flags: List[str] = field(default_factory=list)
+    compliance_flags: list[str] = field(default_factory=list)
 
     # Pagination
     limit: int = 100
@@ -295,7 +300,7 @@ class AuditQuery:
     order_by: str = "timestamp"
     order_desc: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "start_time": self.start_time.isoformat() if self.start_time else None,
@@ -315,7 +320,7 @@ class AuditQuery:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuditQuery":
+    def from_dict(cls, data: dict[str, Any]) -> "AuditQuery":
         """Create from dictionary representation."""
         return cls(
             start_time=(

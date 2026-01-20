@@ -1,12 +1,12 @@
 """Integration tests for PostgreSQL database operations."""
 
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from lacuna.db.models import ClassificationModel, LineageEdgeModel, AuditLogModel
-from lacuna.models.classification import DataTier
+import pytest
 
+from lacuna.db.models import AuditLogModel, ClassificationModel, LineageEdgeModel
+from lacuna.models.classification import DataTier
 
 pytestmark = pytest.mark.integration
 
@@ -53,7 +53,11 @@ class TestClassificationModel:
         db_session.commit()
 
         # Verify it was saved
-        saved = db_session.query(ClassificationModel).filter_by(id=classification.id).first()
+        saved = (
+            db_session.query(ClassificationModel)
+            .filter_by(id=classification.id)
+            .first()
+        )
         assert saved is not None
         assert saved.tier == "PROPRIETARY"
         assert saved.confidence == 0.95
@@ -76,9 +80,9 @@ class TestClassificationModel:
         db_session.commit()
 
         # Query by tier
-        proprietary = db_session.query(ClassificationModel).filter_by(
-            tier="PROPRIETARY"
-        ).all()
+        proprietary = (
+            db_session.query(ClassificationModel).filter_by(tier="PROPRIETARY").all()
+        )
 
         assert len(proprietary) >= 1
         assert all(c.tier == "PROPRIETARY" for c in proprietary)
@@ -111,7 +115,9 @@ class TestClassificationModel:
         db_session.commit()
 
         # Verify relationship
-        saved_child = db_session.query(ClassificationModel).filter_by(id=child.id).first()
+        saved_child = (
+            db_session.query(ClassificationModel).filter_by(id=child.id).first()
+        )
         assert saved_child.parent_id == parent.id
         assert saved_child.parent is not None
         assert saved_child.parent.tier == "PROPRIETARY"
@@ -156,9 +162,11 @@ class TestLineageEdgeModel:
         db_session.commit()
 
         # Query by source
-        edges = db_session.query(LineageEdgeModel).filter_by(
-            source_artifact_id=source_id
-        ).all()
+        edges = (
+            db_session.query(LineageEdgeModel)
+            .filter_by(source_artifact_id=source_id)
+            .all()
+        )
 
         assert len(edges) == 3
 
@@ -225,7 +233,9 @@ class TestAuditLogModel:
         db_session.add(audit)
         db_session.commit()
 
-        saved = db_session.query(AuditLogModel).filter_by(event_id=audit.event_id).first()
+        saved = (
+            db_session.query(AuditLogModel).filter_by(event_id=audit.event_id).first()
+        )
         assert saved is not None
         assert saved.event_type == "data.access"
         assert saved.user_id == "test-user"
@@ -275,9 +285,9 @@ class TestAuditLogModel:
         db_session.commit()
 
         # Query policy denials
-        denials = db_session.query(AuditLogModel).filter_by(
-            event_type="policy.deny"
-        ).all()
+        denials = (
+            db_session.query(AuditLogModel).filter_by(event_type="policy.deny").all()
+        )
 
         assert len(denials) >= 3
         assert all(d.action_result == "denied" for d in denials)
@@ -306,14 +316,16 @@ class TestAuditLogModel:
         db_session.commit()
 
         # Verify chain
-        logs = db_session.query(AuditLogModel).filter_by(
-            user_id="chain-test"
-        ).order_by(AuditLogModel.timestamp).all()
+        logs = (
+            db_session.query(AuditLogModel)
+            .filter_by(user_id="chain-test")
+            .order_by(AuditLogModel.timestamp)
+            .all()
+        )
 
         assert len(logs) == 5
         # First record should have no previous hash
         assert logs[0].previous_record_hash is None
         # Subsequent records should chain
         for i in range(1, len(logs)):
-            assert logs[i].previous_record_hash == logs[i-1].record_hash
-
+            assert logs[i].previous_record_hash == logs[i - 1].record_hash

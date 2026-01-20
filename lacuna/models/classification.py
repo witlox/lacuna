@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 
@@ -67,13 +67,13 @@ class ClassificationContext:
     ip_address: Optional[str] = None
 
     # Conversation history
-    conversation: List[Dict[str, str]] = field(default_factory=list)
+    conversation: list[dict[str, str]] = field(default_factory=list)
 
     # File context
-    files: List[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Timestamp
     timestamp: datetime = field(default_factory=_utc_now)
@@ -89,10 +89,10 @@ class Classification:
 
     # Reasoning
     reasoning: str
-    matched_rules: List[str] = field(default_factory=list)
+    matched_rules: list[str] = field(default_factory=list)
 
     # Tags (PII, PHI, FINANCIAL, etc.)
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     # Classification metadata
     classifier_name: str = "unknown"
@@ -104,9 +104,9 @@ class Classification:
     parent_classification_id: Optional[UUID] = None
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "tier": self.tier.value,
@@ -127,7 +127,7 @@ class Classification:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Classification":
+    def from_dict(cls, data: dict[str, Any]) -> "Classification":
         """Create from dictionary representation."""
         return cls(
             tier=DataTier(data["tier"]),
@@ -137,12 +137,16 @@ class Classification:
             tags=data.get("tags", []),
             classifier_name=data.get("classifier_name", "unknown"),
             classifier_version=data.get("classifier_version"),
-            classification_id=UUID(data["classification_id"])
-            if "classification_id" in data
-            else uuid4(),
-            classified_at=datetime.fromisoformat(data["classified_at"])
-            if "classified_at" in data
-            else _utc_now(),
+            classification_id=(
+                UUID(data["classification_id"])
+                if "classification_id" in data
+                else uuid4()
+            ),
+            classified_at=(
+                datetime.fromisoformat(data["classified_at"])
+                if "classified_at" in data
+                else _utc_now()
+            ),
             parent_classification_id=(
                 UUID(data["parent_classification_id"])
                 if data.get("parent_classification_id")
@@ -164,7 +168,9 @@ class Classification:
         inherited_tags = list(set(self.tags + parent.tags))
 
         # Combine reasoning
-        inherited_reasoning = f"{self.reasoning} (inherited from parent: {parent.reasoning})"
+        inherited_reasoning = (
+            f"{self.reasoning} (inherited from parent: {parent.reasoning})"
+        )
 
         return Classification(
             tier=inherited_tier,

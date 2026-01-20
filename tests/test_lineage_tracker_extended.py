@@ -1,15 +1,16 @@
 """Additional tests for LineageTracker to improve coverage."""
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, PropertyMock, patch
 from uuid import uuid4
 
-from lacuna.lineage.tracker import LineageTracker
+import pytest
+
 from lacuna.lineage.backend import LineageBackend
-from lacuna.models.lineage import LineageEdge, LineageGraph, LineageNode
-from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+from lacuna.lineage.tracker import LineageTracker
 from lacuna.models.classification import Classification, DataTier
+from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+from lacuna.models.lineage import LineageEdge, LineageGraph, LineageNode
 
 
 class TestLineageTrackerAdvanced:
@@ -49,7 +50,7 @@ class TestLineageTrackerAdvanced:
             tags=["PII", "GDPR"],
         )
 
-        edge = tracker.track_operation(operation, classification)
+        _edge = tracker.track_operation(operation, classification)
 
         # Verify the edge was written with metadata
         mock_backend.write_edges.assert_called_once()
@@ -64,14 +65,14 @@ class TestLineageTrackerAdvanced:
             LineageEdge(
                 source_id="parent.csv",
                 destination_id="target.csv",
-                operation_type="transform"
+                operation_type="transform",
             )
         ]
         mock_backend.get_downstream_edges.return_value = [
             LineageEdge(
                 source_id="target.csv",
                 destination_id="child.csv",
-                operation_type="export"
+                operation_type="export",
             )
         ]
 
@@ -87,7 +88,9 @@ class TestLineageTrackerAdvanced:
         assert classification.tier == DataTier.PUBLIC
         assert classification.confidence == 0.5
 
-    def test_compute_inherited_classification_with_parents(self, tracker, mock_backend) -> None:
+    def test_compute_inherited_classification_with_parents(
+        self, tracker, mock_backend
+    ) -> None:
         """Test classification inheritance with parents."""
         # Set up parent classification
         parent_class = Classification(
@@ -99,7 +102,9 @@ class TestLineageTrackerAdvanced:
         tracker._node_classifications["parent.csv"] = parent_class
 
         # Add edge in graph
-        edge = LineageEdge(source_id="parent.csv", destination_id="child.csv", operation_type="t")
+        edge = LineageEdge(
+            source_id="parent.csv", destination_id="child.csv", operation_type="t"
+        )
         tracker._add_edge_to_graph(edge)
 
         inherited = tracker.compute_inherited_classification("child.csv")
@@ -108,15 +113,20 @@ class TestLineageTrackerAdvanced:
         assert "PII" in inherited.tags
         assert inherited.confidence == 0.95
 
-    def test_compute_inherited_classification_max_tier(self, tracker, mock_backend) -> None:
+    def test_compute_inherited_classification_max_tier(
+        self, tracker, mock_backend
+    ) -> None:
         """Test that DataTier enum supports comparison for inheritance logic."""
         # The compute_inherited_classification method uses max() on tiers
         # This test verifies the tier comparison logic
         tiers = [DataTier.PUBLIC, DataTier.INTERNAL, DataTier.PROPRIETARY]
 
         # Verify ordering (PUBLIC is least restrictive, PROPRIETARY is most)
-        assert sorted(tiers) == [DataTier.PUBLIC, DataTier.INTERNAL, DataTier.PROPRIETARY]
-
+        assert sorted(tiers) == [
+            DataTier.PUBLIC,
+            DataTier.INTERNAL,
+            DataTier.PROPRIETARY,
+        ]
 
     def test_compute_inherited_with_own_classification(self, tracker) -> None:
         """Test inheritance with artifact's own classification."""
@@ -129,7 +139,9 @@ class TestLineageTrackerAdvanced:
         tracker._node_classifications["parent.csv"] = parent_class
 
         tracker._add_edge_to_graph(
-            LineageEdge(source_id="parent.csv", destination_id="child.csv", operation_type="t")
+            LineageEdge(
+                source_id="parent.csv", destination_id="child.csv", operation_type="t"
+            )
         )
 
         own_class = Classification(
@@ -163,15 +175,23 @@ class TestLineageTrackerAdvanced:
         """Test impact analysis for an artifact."""
         # Build a simple graph
         tracker._add_edge_to_graph(
-            LineageEdge(source_id="source.csv", destination_id="mid.csv", operation_type="t")
+            LineageEdge(
+                source_id="source.csv", destination_id="mid.csv", operation_type="t"
+            )
         )
         tracker._add_edge_to_graph(
-            LineageEdge(source_id="mid.csv", destination_id="final.csv", operation_type="t")
+            LineageEdge(
+                source_id="mid.csv", destination_id="final.csv", operation_type="t"
+            )
         )
 
         mock_backend.get_downstream_edges.return_value = [
-            LineageEdge(source_id="source.csv", destination_id="mid.csv", operation_type="t"),
-            LineageEdge(source_id="mid.csv", destination_id="final.csv", operation_type="t"),
+            LineageEdge(
+                source_id="source.csv", destination_id="mid.csv", operation_type="t"
+            ),
+            LineageEdge(
+                source_id="mid.csv", destination_id="final.csv", operation_type="t"
+            ),
         ]
 
         analysis = tracker.get_impact_analysis("source.csv")
@@ -253,7 +273,9 @@ class TestLineageTrackerAdvanced:
         assert "C" in upstream
         # D might or might not be included depending on implementation
 
-    def test_track_single_source_with_classification(self, tracker, mock_backend) -> None:
+    def test_track_single_source_with_classification(
+        self, tracker, mock_backend
+    ) -> None:
         """Test tracking single source with classification."""
         operation = DataOperation(
             operation_type=OperationType.EXPORT,
@@ -279,7 +301,9 @@ class TestLineageTrackerAdvanced:
     def test_fallback_to_database_upstream(self, tracker, mock_backend) -> None:
         """Test falling back to database for upstream when not in memory."""
         mock_backend.get_upstream_edges.return_value = [
-            LineageEdge(source_id="db_parent", destination_id="target", operation_type="t")
+            LineageEdge(
+                source_id="db_parent", destination_id="target", operation_type="t"
+            )
         ]
 
         upstream = tracker.get_upstream("target")
@@ -290,7 +314,9 @@ class TestLineageTrackerAdvanced:
     def test_fallback_to_database_downstream(self, tracker, mock_backend) -> None:
         """Test falling back to database for downstream when not in memory."""
         mock_backend.get_downstream_edges.return_value = [
-            LineageEdge(source_id="source", destination_id="db_child", operation_type="t")
+            LineageEdge(
+                source_id="source", destination_id="db_child", operation_type="t"
+            )
         ]
 
         downstream = tracker.get_downstream("source")
@@ -334,7 +360,7 @@ class TestLineageTrackerEdgeCases:
         )
 
         # Should fall back to resource_id as source
-        result = tracker.track_operation(operation)
+        _result = tracker.track_operation(operation)
 
         mock_backend.write_edge.assert_called_once()
 
@@ -379,4 +405,3 @@ class TestLineageTrackerEdgeCases:
 
         # Should fall back to own classification
         assert result.tier == DataTier.PUBLIC
-

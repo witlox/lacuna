@@ -1,9 +1,10 @@
 """Tests for audit logging."""
 
-import pytest
 from datetime import datetime, timezone
 
-from lacuna.models.audit import AuditRecord, AuditQuery, EventType, Severity
+import pytest
+
+from lacuna.models.audit import AuditQuery, AuditRecord, EventType, Severity
 
 
 class TestAuditRecord:
@@ -171,4 +172,3 @@ class TestAuditQuery:
         assert data["user_id"] == "test-user"
         assert data["limit"] == 25
         assert "data.access" in data["event_types"]
-

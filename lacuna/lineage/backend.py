@@ -1,16 +1,14 @@
 """Lineage storage backend for PostgreSQL."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Optional
 
 import structlog
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
 
 from lacuna.db.base import session_scope
-from lacuna.db.models import LineageEdgeModel, ClassificationModel
-from lacuna.models.lineage import LineageEdge, LineageNode
+from lacuna.db.models import LineageEdgeModel
+from lacuna.models.lineage import LineageEdge
 
 logger = structlog.get_logger()
 
@@ -55,7 +53,7 @@ class LineageBackend:
                 operation=edge.operation_type,
             )
 
-    def write_edges(self, edges: List[LineageEdge]) -> None:
+    def write_edges(self, edges: list[LineageEdge]) -> None:
         """Write multiple lineage edges in a batch.
 
         Args:
@@ -88,7 +86,7 @@ class LineageBackend:
 
     def get_upstream_edges(
         self, artifact_id: str, max_depth: Optional[int] = None
-    ) -> List[LineageEdge]:
+    ) -> list[LineageEdge]:
         """Get all upstream edges for an artifact.
 
         Args:
@@ -130,7 +128,7 @@ class LineageBackend:
 
     def get_downstream_edges(
         self, artifact_id: str, max_depth: Optional[int] = None
-    ) -> List[LineageEdge]:
+    ) -> list[LineageEdge]:
         """Get all downstream edges for an artifact.
 
         Args:
@@ -170,7 +168,7 @@ class LineageBackend:
 
             return edges
 
-    def get_edges_for_artifact(self, artifact_id: str) -> List[LineageEdge]:
+    def get_edges_for_artifact(self, artifact_id: str) -> list[LineageEdge]:
         """Get all edges connected to an artifact.
 
         Args:
@@ -196,7 +194,7 @@ class LineageBackend:
         self,
         limit: int = 100,
         since: Optional[datetime] = None,
-    ) -> List[LineageEdge]:
+    ) -> list[LineageEdge]:
         """Get recent lineage edges.
 
         Args:
@@ -245,4 +243,3 @@ class LineageBackend:
                 )
             },
         )
-

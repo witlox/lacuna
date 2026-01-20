@@ -1,6 +1,6 @@
 """Lineage API endpoints."""
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ class LineageNode(BaseModel):
     node_id: str
     resource_type: Optional[str] = None
     classification_tier: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class LineageEdge(BaseModel):
@@ -33,8 +33,8 @@ class LineageGraphResponse(BaseModel):
     """Response model for lineage graph."""
 
     artifact_id: str
-    nodes: List[LineageNode]
-    edges: List[LineageEdge]
+    nodes: list[LineageNode]
+    edges: list[LineageEdge]
     upstream_count: int
     downstream_count: int
 
@@ -85,14 +85,14 @@ async def get_lineage(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class UpstreamResponse(BaseModel):
     """Response model for upstream dependencies."""
 
     artifact_id: str
-    upstream: List[str]
+    upstream: list[str]
     count: int
 
 
@@ -115,7 +115,7 @@ class DownstreamResponse(BaseModel):
     """Response model for downstream dependencies."""
 
     artifact_id: str
-    downstream: List[str]
+    downstream: list[str]
     count: int
 
 
@@ -139,8 +139,8 @@ class ImpactAnalysisResponse(BaseModel):
 
     artifact_id: str
     downstream_count: int
-    downstream_artifacts: List[str]
-    by_depth: Dict[str, List[str]]
+    downstream_artifacts: list[str]
+    by_depth: dict[str, list[str]]
 
 
 @router.get("/lineage/{artifact_id}/impact", response_model=ImpactAnalysisResponse)
@@ -153,7 +153,6 @@ async def get_impact_analysis(
     Shows all downstream dependencies that would be affected
     by changes to this artifact.
     """
-    from lacuna.lineage import LineageTracker
 
     tracker = engine._lineage_tracker
     analysis = tracker.get_impact_analysis(artifact_id)
@@ -167,4 +166,3 @@ async def get_impact_analysis(
         downstream_artifacts=analysis.get("downstream_artifacts", []),
         by_depth=by_depth,
     )
-

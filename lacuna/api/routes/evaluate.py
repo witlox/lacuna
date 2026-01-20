@@ -1,6 +1,6 @@
 """Evaluation API endpoints for policy decisions."""
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -22,10 +22,14 @@ class EvaluateRequest(BaseModel):
     resource_id: str = Field(..., description="Resource identifier")
     user_id: str = Field(..., description="User performing the operation")
     user_role: Optional[str] = Field(None, description="User role")
-    destination: Optional[str] = Field(None, description="Destination for exports/writes")
+    destination: Optional[str] = Field(
+        None, description="Destination for exports/writes"
+    )
     destination_type: Optional[str] = Field(None, description="Destination type")
     destination_encrypted: bool = Field(False, description="Is destination encrypted")
-    sources: Optional[List[str]] = Field(None, description="Source artifacts for transformations")
+    sources: Optional[list[str]] = Field(
+        None, description="Source artifacts for transformations"
+    )
     purpose: Optional[str] = Field(None, description="Business justification")
     project: Optional[str] = Field(None, description="Project context")
     environment: Optional[str] = Field(None, description="Environment")
@@ -40,11 +44,11 @@ class EvaluateResponse(BaseModel):
     )
     confidence: Optional[float] = Field(None, description="Classification confidence")
     reasoning: str = Field(..., description="Explanation for decision")
-    alternatives: List[str] = Field(
+    alternatives: list[str] = Field(
         default_factory=list, description="Alternative actions if denied"
     )
-    tags: List[str] = Field(default_factory=list, description="Data tags")
-    policy_rules: List[str] = Field(
+    tags: list[str] = Field(default_factory=list, description="Data tags")
+    policy_rules: list[str] = Field(
         default_factory=list, description="Matched policy rules"
     )
     evaluation_id: str = Field(..., description="Unique evaluation ID")
@@ -102,7 +106,7 @@ async def evaluate_operation(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class ExportEvaluateRequest(BaseModel):
@@ -141,4 +145,3 @@ async def evaluate_export(
         evaluation_id=str(result.evaluation_id),
         latency_ms=result.total_latency_ms,
     )
-

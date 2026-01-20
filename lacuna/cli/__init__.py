@@ -44,6 +44,7 @@ def cli(ctx: click.Context, debug: bool) -> None:
 
     if debug:
         import logging
+
         logging.basicConfig(level=logging.DEBUG)
 
 
@@ -77,7 +78,7 @@ def classify(
         if json_output:
             click.echo(json.dumps(classification.to_dict(), indent=2))
         else:
-            click.echo(f"\n🔍 Classification Result")
+            click.echo("\n🔍 Classification Result")
             click.echo(f"{'=' * 40}")
             click.echo(f"Tier: {click.style(classification.tier.value, bold=True)}")
             click.echo(f"Confidence: {classification.confidence:.0%}")
@@ -141,7 +142,7 @@ def evaluate(
                 click.echo(f"Tags: {', '.join(result.tags)}")
 
             if result.alternatives:
-                click.echo(f"\nAlternatives:")
+                click.echo("\nAlternatives:")
                 for i, alt in enumerate(result.alternatives, 1):
                     click.echo(f"  {i}. {alt}")
 
@@ -192,9 +193,15 @@ def audit_verify(
             click.echo(json.dumps(result, indent=2))
         else:
             if result["verified"]:
-                click.echo(click.style("\n✓ Audit Log Integrity Verified", fg="green", bold=True))
+                click.echo(
+                    click.style(
+                        "\n✓ Audit Log Integrity Verified", fg="green", bold=True
+                    )
+                )
             else:
-                click.echo(click.style("\n❌ Audit Log Integrity Failed", fg="red", bold=True))
+                click.echo(
+                    click.style("\n❌ Audit Log Integrity Failed", fg="red", bold=True)
+                )
 
             click.echo(f"{'=' * 40}")
             click.echo(f"Records Checked: {result['records_checked']}")
@@ -335,7 +342,9 @@ def lineage_impact(artifact_id: str, json_output: bool) -> None:
 
         if json_output:
             # Convert int keys to strings for JSON
-            analysis["by_depth"] = {str(k): v for k, v in analysis.get("by_depth", {}).items()}
+            analysis["by_depth"] = {
+                str(k): v for k, v in analysis.get("by_depth", {}).items()
+            }
             click.echo(json.dumps(analysis, indent=2))
         else:
             click.echo(f"\n⚡ Impact Analysis for: {artifact_id}")
@@ -343,7 +352,7 @@ def lineage_impact(artifact_id: str, json_output: bool) -> None:
             click.echo(f"Downstream Artifacts: {analysis['downstream_count']}")
 
             if analysis["downstream_artifacts"]:
-                click.echo(f"\nAffected Artifacts:")
+                click.echo("\nAffected Artifacts:")
                 for artifact in analysis["downstream_artifacts"][:10]:
                     click.echo(f"  - {artifact}")
 
@@ -401,14 +410,14 @@ def config() -> None:
 
     settings = get_settings()
 
-    click.echo(f"\n⚙️ Lacuna Configuration")
+    click.echo("\n⚙️ Lacuna Configuration")
     click.echo(f"{'=' * 40}")
     click.echo(f"Version: {__version__}")
     click.echo(f"Environment: {settings.environment}")
     click.echo(f"Debug: {settings.debug}")
     click.echo(f"\nDatabase: {settings.database.url[:50]}...")
     click.echo(f"Redis: {settings.redis.url}")
-    click.echo(f"\nClassification:")
+    click.echo("\nClassification:")
     click.echo(f"  Strategy: {settings.classification.strategy}")
     click.echo(f"  Heuristic: {settings.classification.heuristic_enabled}")
     click.echo(f"  Embedding: {settings.classification.embedding_enabled}")
@@ -428,18 +437,18 @@ def stats() -> None:
     try:
         stats = engine.get_stats()
 
-        click.echo(f"\n📊 Governance Engine Statistics")
+        click.echo("\n📊 Governance Engine Statistics")
         click.echo(f"{'=' * 40}")
 
-        click.echo(f"\nClassifier:")
+        click.echo("\nClassifier:")
         for key, value in stats.get("classifier", {}).items():
             click.echo(f"  {key}: {value}")
 
-        click.echo(f"\nPolicy Engine:")
+        click.echo("\nPolicy Engine:")
         for key, value in stats.get("policy_engine", {}).items():
             click.echo(f"  {key}: {value}")
 
-        click.echo(f"\nLineage Tracker:")
+        click.echo("\nLineage Tracker:")
         for key, value in stats.get("lineage_tracker", {}).items():
             click.echo(f"  {key}: {value}")
 
@@ -454,4 +463,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

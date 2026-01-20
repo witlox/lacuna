@@ -3,7 +3,7 @@
 import threading
 from datetime import datetime
 from queue import Empty, Queue
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import structlog
 
@@ -50,7 +50,7 @@ class AuditLogger:
 
         self._backend = backend or AuditBackend()
         self._queue: Queue[AuditRecord] = Queue()
-        self._buffer: List[AuditRecord] = []
+        self._buffer: list[AuditRecord] = []
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
         self._worker_thread: Optional[threading.Thread] = None
@@ -116,7 +116,7 @@ class AuditLogger:
         classification: Classification,
         query: str,
         user_id: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> AuditRecord:
         """Log a classification event.
 
@@ -220,7 +220,9 @@ class AuditLogger:
         Returns:
             Created audit record
         """
-        event_type = EventType.POLICY_ALLOW if decision.allowed else EventType.POLICY_DENY
+        event_type = (
+            EventType.POLICY_ALLOW if decision.allowed else EventType.POLICY_DENY
+        )
         severity = Severity.INFO if decision.allowed else Severity.WARNING
 
         record = AuditRecord(
@@ -260,7 +262,7 @@ class AuditLogger:
         user_id: str,
         resource_type: str,
         resource_id: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ) -> AuditRecord:
         """Log an administrative action.
 
@@ -326,7 +328,7 @@ class AuditLogger:
         self,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Verify audit log integrity.
 
         Args:
@@ -338,7 +340,7 @@ class AuditLogger:
         """
         return self._backend.verify_chain(start_time, end_time)
 
-    def query(self, **kwargs: Any) -> List[AuditRecord]:
+    def query(self, **kwargs: Any) -> list[AuditRecord]:
         """Query audit records.
 
         Args:
@@ -365,4 +367,3 @@ class AuditLogger:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.stop()
-

@@ -1,9 +1,10 @@
 """Tests for Lacuna CLI."""
 
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
 from click.testing import CliRunner
-from unittest.mock import MagicMock, patch
 
 from lacuna.cli import cli
 from lacuna.models.classification import Classification, DataTier
@@ -104,12 +105,9 @@ class TestClassifyCommand:
         mock_engine.classify.return_value = mock_classification
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "classify",
-            "--project", "analytics",
-            "--user", "test-user",
-            "query"
-        ])
+        result = runner.invoke(
+            cli, ["classify", "--project", "analytics", "--user", "test-user", "query"]
+        )
 
         assert result.exit_code == 0
         # Verify classify was called
@@ -174,7 +172,9 @@ class TestEvaluateCommand:
         mock_engine.evaluate_export.return_value = mock_result
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["evaluate", "sensitive.csv", "~/Downloads/export.csv"])
+        result = runner.invoke(
+            cli, ["evaluate", "sensitive.csv", "~/Downloads/export.csv"]
+        )
 
         assert result.exit_code == 0
         assert "Denied" in result.output
@@ -252,11 +252,17 @@ class TestAuditCommands:
         }
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "audit", "verify",
-            "--start", "2025-01-01T00:00:00",
-            "--end", "2025-01-19T00:00:00"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "audit",
+                "verify",
+                "--start",
+                "2025-01-01T00:00:00",
+                "--end",
+                "2025-01-19T00:00:00",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -395,10 +401,11 @@ class TestServeCommand:
     def test_serve_command(self, mock_uvicorn_run) -> None:
         """Test serve command."""
         runner = CliRunner()
-        result = runner.invoke(cli, ["serve", "--port", "8001"], catch_exceptions=False)
+        _result = runner.invoke(
+            cli, ["serve", "--port", "8001"], catch_exceptions=False
+        )
 
         # The command should try to start the server
         mock_uvicorn_run.assert_called_once()
         call_kwargs = mock_uvicorn_run.call_args[1]
         assert call_kwargs["port"] == 8001
-

@@ -1,6 +1,6 @@
 """Lineage tracker for data flow and dependency tracking."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import networkx as nx
 import structlog
@@ -45,8 +45,8 @@ class LineageTracker:
 
         # In-memory graph for fast traversal
         self._graph = nx.DiGraph()
-        self._node_classifications: Dict[str, Classification] = {}
-        self._node_metadata: Dict[str, Dict[str, Any]] = {}
+        self._node_classifications: dict[str, Classification] = {}
+        self._node_metadata: dict[str, dict[str, Any]] = {}
 
     def track_operation(
         self,
@@ -146,7 +146,7 @@ class LineageTracker:
 
     def get_upstream(
         self, artifact_id: str, max_depth: Optional[int] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """Get all upstream dependencies of an artifact.
 
         Args:
@@ -176,11 +176,11 @@ class LineageTracker:
 
         # Fall back to database
         edges = self._backend.get_upstream_edges(artifact_id, max_depth=depth)
-        return list(set(edge.source_id for edge in edges))
+        return list({edge.source_id for edge in edges})
 
     def get_downstream(
         self, artifact_id: str, max_depth: Optional[int] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """Get all downstream dependents of an artifact.
 
         Args:
@@ -209,7 +209,7 @@ class LineageTracker:
 
         # Fall back to database
         edges = self._backend.get_downstream_edges(artifact_id, max_depth=depth)
-        return list(set(edge.destination_id for edge in edges))
+        return list({edge.destination_id for edge in edges})
 
     def get_lineage(self, artifact_id: str) -> LineageGraph:
         """Get complete lineage graph for an artifact.
@@ -223,12 +223,14 @@ class LineageTracker:
         graph = LineageGraph(name=f"lineage_{artifact_id}")
 
         # Add the target node
+        cached_classification = self._node_classifications.get(artifact_id)
+        classification_tier = (
+            cached_classification.tier if cached_classification else None
+        )
         graph.add_node(
             LineageNode(
                 node_id=artifact_id,
-                classification_tier=self._node_classifications.get(artifact_id, {}).get(
-                    "tier"
-                ),
+                classification_tier=classification_tier,
             )
         )
 
@@ -332,7 +334,7 @@ class LineageTracker:
         self._node_classifications[artifact_id] = classification
         self._graph.add_node(artifact_id, classification=classification.tier.value)
 
-    def get_impact_analysis(self, artifact_id: str) -> Dict[str, Any]:
+    def get_impact_analysis(self, artifact_id: str) -> dict[str, Any]:
         """Analyze impact of changes to an artifact.
 
         Args:
@@ -345,7 +347,7 @@ class LineageTracker:
         downstream_edges = self._backend.get_downstream_edges(artifact_id)
 
         # Group by depth
-        depth_map: Dict[int, List[str]] = {}
+        depth_map: dict[int, list[str]] = {}
         for node in downstream:
             try:
                 if node in self._graph and artifact_id in self._graph:
@@ -393,7 +395,9 @@ class LineageTracker:
         node = graph.nodes.get(root_id)
 
         if node:
-            tier_str = f" ({node.classification_tier})" if node.classification_tier else ""
+            tier_str = (
+                f" ({node.classification_tier})" if node.classification_tier else ""
+            )
             tags_str = f" [{', '.join(node.tags)}]" if node.tags else ""
             lines.append(f"{prefix}{root_id}{tier_str}{tags_str}")
 
@@ -413,7 +417,7 @@ class LineageTracker:
         self._node_metadata.clear()
         logger.info("lineage_cache_cleared")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get lineage tracker statistics."""
         return {
             "enabled": self.enabled,
@@ -422,4 +426,3 @@ class LineageTracker:
             "edges_in_memory": self._graph.number_of_edges(),
             "classifications_cached": len(self._node_classifications),
         }
-

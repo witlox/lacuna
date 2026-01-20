@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 
@@ -44,12 +44,12 @@ class LineageEdge:
     destination_classification: Optional[str] = None
 
     # Tags propagated through this edge
-    tags_propagated: List[str] = field(default_factory=list)
+    tags_propagated: list[str] = field(default_factory=list)
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "edge_id": str(self.edge_id),
@@ -68,13 +68,15 @@ class LineageEdge:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LineageEdge":
+    def from_dict(cls, data: dict[str, Any]) -> "LineageEdge":
         """Create from dictionary representation."""
         return cls(
             edge_id=UUID(data["edge_id"]) if "edge_id" in data else uuid4(),
-            timestamp=datetime.fromisoformat(data["timestamp"])
-            if "timestamp" in data
-            else _utc_now(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if "timestamp" in data
+                else _utc_now()
+            ),
             source_id=data.get("source_id", ""),
             destination_id=data.get("destination_id", ""),
             operation_type=data.get("operation_type", "unknown"),
@@ -107,7 +109,7 @@ class LineageNode:
     # Classification
     classification_tier: Optional[str] = None
     classification_confidence: Optional[float] = None
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     # Creation metadata
     created_at: datetime = field(default_factory=_utc_now)
@@ -115,9 +117,9 @@ class LineageNode:
     created_via: Optional[str] = None  # Operation type that created this
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "node_id": self.node_id,
@@ -133,7 +135,7 @@ class LineageNode:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LineageNode":
+    def from_dict(cls, data: dict[str, Any]) -> "LineageNode":
         """Create from dictionary representation."""
         return cls(
             node_id=data["node_id"],
@@ -142,9 +144,11 @@ class LineageNode:
             classification_tier=data.get("classification_tier"),
             classification_confidence=data.get("classification_confidence"),
             tags=data.get("tags", []),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if "created_at" in data
-            else _utc_now(),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else _utc_now()
+            ),
             created_by=data.get("created_by"),
             created_via=data.get("created_via"),
             metadata=data.get("metadata", {}),
@@ -166,8 +170,8 @@ class LineageGraph:
     description: Optional[str] = None
 
     # Graph structure
-    nodes: Dict[str, LineageNode] = field(default_factory=dict)
-    edges: List[LineageEdge] = field(default_factory=list)
+    nodes: dict[str, LineageNode] = field(default_factory=dict)
+    edges: list[LineageEdge] = field(default_factory=list)
 
     # Metadata
     created_at: datetime = field(default_factory=_utc_now)
@@ -189,7 +193,7 @@ class LineageGraph:
         self.edges.append(edge)
         self.updated_at = _utc_now()
 
-    def get_upstream(self, node_id: str, max_depth: Optional[int] = None) -> List[str]:
+    def get_upstream(self, node_id: str, max_depth: Optional[int] = None) -> list[str]:
         """
         Get all upstream dependencies of a node.
 
@@ -200,8 +204,8 @@ class LineageGraph:
         Returns:
             List of node IDs that are upstream dependencies
         """
-        visited: Set[str] = set()
-        queue: List[Tuple[str, int]] = [(node_id, 0)]
+        visited: set[str] = set()
+        queue: list[tuple[str, int]] = [(node_id, 0)]
 
         while queue:
             current_id, depth = queue.pop(0)
@@ -225,7 +229,7 @@ class LineageGraph:
 
     def get_downstream(
         self, node_id: str, max_depth: Optional[int] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Get all downstream dependencies of a node.
 
@@ -236,8 +240,8 @@ class LineageGraph:
         Returns:
             List of node IDs that are downstream dependencies
         """
-        visited: Set[str] = set()
-        queue: List[Tuple[str, int]] = [(node_id, 0)]
+        visited: set[str] = set()
+        queue: list[tuple[str, int]] = [(node_id, 0)]
 
         while queue:
             current_id, depth = queue.pop(0)
@@ -259,7 +263,7 @@ class LineageGraph:
         visited.discard(node_id)
         return list(visited)
 
-    def get_lineage_chain(self, node_id: str) -> List[List[str]]:
+    def get_lineage_chain(self, node_id: str) -> list[list[str]]:
         """
         Get all lineage paths from root nodes to the specified node.
 
@@ -271,12 +275,14 @@ class LineageGraph:
         """
         # Find all root nodes (nodes with no incoming edges)
         nodes_with_incoming = {edge.destination_id for edge in self.edges}
-        root_nodes = [nid for nid in self.nodes.keys() if nid not in nodes_with_incoming]
+        root_nodes = [
+            nid for nid in self.nodes.keys() if nid not in nodes_with_incoming
+        ]
 
         # Find all paths from each root to target
-        all_paths: List[List[str]] = []
+        all_paths: list[list[str]] = []
 
-        def find_paths(current: str, target: str, path: List[str]) -> None:
+        def find_paths(current: str, target: str, path: list[str]) -> None:
             """DFS to find all paths from current to target."""
             if current == target:
                 all_paths.append(path + [current])
@@ -296,7 +302,7 @@ class LineageGraph:
 
         return all_paths
 
-    def get_edges_for_node(self, node_id: str) -> List[LineageEdge]:
+    def get_edges_for_node(self, node_id: str) -> list[LineageEdge]:
         """Get all edges connected to a node (incoming and outgoing)."""
         return [
             edge
@@ -312,7 +318,7 @@ class LineageGraph:
         """Get the number of edges in the graph."""
         return len(self.edges)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "graph_id": str(self.graph_id),
@@ -325,18 +331,22 @@ class LineageGraph:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LineageGraph":
+    def from_dict(cls, data: dict[str, Any]) -> "LineageGraph":
         """Create from dictionary representation."""
         graph = cls(
             graph_id=UUID(data["graph_id"]) if "graph_id" in data else uuid4(),
             name=data.get("name"),
             description=data.get("description"),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if "created_at" in data
-            else _utc_now(),
-            updated_at=datetime.fromisoformat(data["updated_at"])
-            if "updated_at" in data
-            else _utc_now(),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else _utc_now()
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if "updated_at" in data
+                else _utc_now()
+            ),
         )
 
         # Add nodes

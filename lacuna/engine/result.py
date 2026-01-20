@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from lacuna.models.classification import Classification
@@ -40,11 +40,11 @@ class GovernanceResult:
 
     # Reasoning and feedback
     reasoning: str = ""
-    alternatives: List[str] = field(default_factory=list)
-    matched_rules: List[str] = field(default_factory=list)
+    alternatives: list[str] = field(default_factory=list)
+    matched_rules: list[str] = field(default_factory=list)
 
     # Lineage
-    lineage_chain: List[str] = field(default_factory=list)
+    lineage_chain: list[str] = field(default_factory=list)
 
     # Performance metrics
     classification_latency_ms: Optional[float] = None
@@ -57,17 +57,21 @@ class GovernanceResult:
     # Error information
     error: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "evaluation_id": str(self.evaluation_id),
             "timestamp": self.timestamp.isoformat(),
             "allowed": self.allowed,
-            "classification": self.classification.to_dict() if self.classification else None,
+            "classification": (
+                self.classification.to_dict() if self.classification else None
+            ),
             "classification_tier": (
                 self.classification.tier.value if self.classification else None
             ),
-            "confidence": self.classification.confidence if self.classification else None,
+            "confidence": (
+                self.classification.confidence if self.classification else None
+            ),
             "reasoning": self.reasoning,
             "alternatives": self.alternatives,
             "matched_rules": self.matched_rules,
@@ -130,7 +134,6 @@ class GovernanceResult:
         return self.classification.confidence if self.classification else None
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         """Get classification tags."""
         return self.classification.tags if self.classification else []
-

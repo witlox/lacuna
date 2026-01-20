@@ -1,7 +1,7 @@
 """Classification pipeline orchestrating multiple classifiers."""
 
 import time
-from typing import List, Optional
+from typing import Optional
 
 import structlog
 
@@ -30,7 +30,7 @@ class ClassificationPipeline:
 
     def __init__(
         self,
-        classifiers: Optional[List[Classifier]] = None,
+        classifiers: Optional[list[Classifier]] = None,
         confidence_threshold: float = 0.9,
         short_circuit: bool = True,
         default_tier: DataTier = DataTier.PROPRIETARY,
@@ -67,13 +67,13 @@ class ClassificationPipeline:
         self._cache: dict = {}
         self._cache_enabled = True
 
-    def _init_default_classifiers(self) -> List[Classifier]:
+    def _init_default_classifiers(self) -> list[Classifier]:
         """Initialize default classifier stack.
 
         Returns:
             List of classifiers in priority order
         """
-        classifiers = []
+        classifiers: list[Classifier] = []
 
         # Layer 1: Heuristic (always enabled, fastest)
         if self.settings.classification.heuristic_enabled:
@@ -154,7 +154,10 @@ class ClassificationPipeline:
                     )
 
                     # Short-circuit on high confidence
-                    if self.short_circuit and result.confidence >= self.confidence_threshold:
+                    if (
+                        self.short_circuit
+                        and result.confidence >= self.confidence_threshold
+                    ):
                         elapsed_ms = (time.time() - start_time) * 1000
                         logger.info(
                             "classification_complete",
@@ -267,9 +270,7 @@ class ClassificationPipeline:
             True if removed, False if not found
         """
         initial_len = len(self.classifiers)
-        self.classifiers = [
-            c for c in self.classifiers if c.name != classifier_name
-        ]
+        self.classifiers = [c for c in self.classifiers if c.name != classifier_name]
         return len(self.classifiers) < initial_len
 
     def clear_cache(self) -> None:

@@ -1,13 +1,14 @@
 """Tests for LineageTracker."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from lacuna.lineage.tracker import LineageTracker
+import pytest
+
 from lacuna.lineage.backend import LineageBackend
-from lacuna.models.lineage import LineageEdge
-from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+from lacuna.lineage.tracker import LineageTracker
 from lacuna.models.classification import Classification, DataTier
+from lacuna.models.data_operation import DataOperation, OperationType, UserContext
+from lacuna.models.lineage import LineageEdge
 
 
 class TestLineageTrackerInit:
@@ -15,20 +16,20 @@ class TestLineageTrackerInit:
 
     def test_tracker_default_init(self) -> None:
         """Test default initialization."""
-        with patch.object(LineageBackend, '__init__', return_value=None):
+        with patch.object(LineageBackend, "__init__", return_value=None):
             tracker = LineageTracker()
             assert tracker.enabled is True
             assert tracker.max_depth == 10
 
     def test_tracker_disabled(self) -> None:
         """Test disabled tracker."""
-        with patch.object(LineageBackend, '__init__', return_value=None):
+        with patch.object(LineageBackend, "__init__", return_value=None):
             tracker = LineageTracker(enabled=False)
             assert tracker.enabled is False
 
     def test_tracker_custom_depth(self) -> None:
         """Test custom max depth."""
-        with patch.object(LineageBackend, '__init__', return_value=None):
+        with patch.object(LineageBackend, "__init__", return_value=None):
             tracker = LineageTracker(max_depth=5)
             assert tracker.max_depth == 5
 
@@ -95,7 +96,7 @@ class TestLineageTrackerOperations:
             user=UserContext(user_id="test-user"),
         )
 
-        edge = tracker.track_operation(operation)
+        _edge = tracker.track_operation(operation)
 
         mock_backend.write_edge.assert_called_once()
 
@@ -142,10 +143,12 @@ class TestLineageTrackerQueries:
     def test_get_upstream_falls_back_to_backend(self, tracker, mock_backend) -> None:
         """Test that upstream query falls back to backend."""
         mock_backend.get_upstream_edges.return_value = [
-            LineageEdge(source_id="db_source", destination_id="target", operation_type="t")
+            LineageEdge(
+                source_id="db_source", destination_id="target", operation_type="t"
+            )
         ]
 
-        upstream = tracker.get_upstream("unknown_artifact")
+        _upstream = tracker.get_upstream("unknown_artifact")
 
         mock_backend.get_upstream_edges.assert_called()
 
@@ -204,7 +207,9 @@ class TestLineageTrackerClassification:
         tracker._node_classifications["customers.csv"] = classification
 
         assert "customers.csv" in tracker._node_classifications
-        assert tracker._node_classifications["customers.csv"].tier == DataTier.PROPRIETARY
+        assert (
+            tracker._node_classifications["customers.csv"].tier == DataTier.PROPRIETARY
+        )
 
     def test_get_classification_for_artifact(self, tracker) -> None:
         """Test retrieving classification for an artifact."""
@@ -228,9 +233,9 @@ class TestLineageBackendMocked:
     def test_model_to_edge_conversion(self) -> None:
         """Test converting database model to edge."""
         # Create a mock model
+        from datetime import datetime, timezone
         from unittest.mock import MagicMock
         from uuid import uuid4
-        from datetime import datetime, timezone
 
         model = MagicMock()
         model.id = uuid4()
@@ -257,4 +262,3 @@ class TestLineageBackendMocked:
         assert edge.source_id == "source.csv"
         assert edge.destination_id == "target.csv"
         assert "PII" in edge.tags_propagated
-

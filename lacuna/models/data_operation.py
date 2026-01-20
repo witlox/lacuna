@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 
@@ -59,7 +59,7 @@ class UserContext:
     session_id: Optional[str] = None
     ip_address: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "user_id": self.user_id,
@@ -71,7 +71,7 @@ class UserContext:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "UserContext":
+    def from_dict(cls, data: dict[str, Any]) -> "UserContext":
         """Create from dictionary representation."""
         return cls(
             user_id=data["user_id"],
@@ -104,7 +104,7 @@ class DataOperation:
     resource_path: Optional[str] = None
 
     # Source and destination (for transformations)
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
     destination: Optional[str] = None
     destination_type: Optional[str] = None
     destination_encrypted: bool = False
@@ -122,19 +122,19 @@ class DataOperation:
     transformation_type: Optional[str] = None  # join, aggregate, filter
 
     # Lineage
-    lineage_chain: List[str] = field(default_factory=list)
+    lineage_chain: list[str] = field(default_factory=list)
     parent_operation_id: Optional[UUID] = None
 
     # Additional metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
 
     # Result information (populated after operation)
     success: Optional[bool] = None
     error_message: Optional[str] = None
     records_affected: Optional[int] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "operation_id": str(self.operation_id),
@@ -165,17 +165,19 @@ class DataOperation:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DataOperation":
+    def from_dict(cls, data: dict[str, Any]) -> "DataOperation":
         """Create from dictionary representation."""
         user_data = data.get("user")
         return cls(
-            operation_id=UUID(data["operation_id"])
-            if "operation_id" in data
-            else uuid4(),
+            operation_id=(
+                UUID(data["operation_id"]) if "operation_id" in data else uuid4()
+            ),
             operation_type=OperationType(data.get("operation_type", "read")),
-            timestamp=datetime.fromisoformat(data["timestamp"])
-            if "timestamp" in data
-            else _utc_now(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if "timestamp" in data
+                else _utc_now()
+            ),
             resource_type=data.get("resource_type", "unknown"),
             resource_id=data.get("resource_id", ""),
             resource_path=data.get("resource_path"),

@@ -1,10 +1,10 @@
 """Tests for configuration loading."""
 
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
+import pytest
 import yaml
 
 from lacuna.config.loader import ConfigLoader
@@ -17,7 +17,7 @@ class TestConfigLoaderInit:
         """Test that loader creates config directory if missing."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_dir = Path(tmpdir) / "nonexistent" / "config"
-            loader = ConfigLoader(config_dir)
+            _loader = ConfigLoader(config_dir)
 
             assert config_dir.exists()
 
@@ -264,4 +264,3 @@ class TestConfigLoaderEdgeCases:
 
             # Should still work with partial files
             assert config["only_default"] is True
-
