@@ -18,11 +18,32 @@ paths:
     - htmlcov
     - docs
 
+# Vendored dependencies - false positives from bundled components
+# These packages have permissive licenses but FOSSA detects GPL from bundled
+# system libraries (BLAS/LAPACK, GCC runtime, etc.) that are dynamically linked
+vendored-dependencies:
+  # numpy: BSD-3-Clause - GPL flags from bundled BLAS/LAPACK headers
+  - name: numpy
+    version: "*"
+  # scipy: BSD-3-Clause - GPL flags from bundled Fortran/BLAS components
+  - name: scipy
+    version: "*"
+  # torch: BSD-3-Clause - GPL flags from bundled GCC runtime
+  - name: torch
+    version: "*"
+  # ruff: MIT - GPL flags from tree-sitter grammars (not linked)
+  - name: ruff
+    version: "*"
+  # setuptools: MIT - GPL flags from pkg_resources vendored code
+  - name: setuptools
+    version: "*"
+
 # Notes on license compliance:
 #
 # Some dependencies may flag GPL/LGPL licenses from bundled components:
 # - numpy: BSD-3-Clause (GPL flags from bundled BLAS/LAPACK)
 # - torch: BSD-3-Clause (GPL flags from bundled GCC runtime)
+# - scipy: BSD-3-Clause (GPL flags from bundled Fortran libraries)
 # - presidio-*: MIT (Microsoft projects)
 # - psycopg2-binary: LGPL-3.0 (dynamic linking is compliant)
 #
