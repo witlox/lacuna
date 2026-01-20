@@ -6,17 +6,21 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
+# Build argument for version (passed from CI)
+ARG VERSION=0.0.0
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
 COPY pyproject.toml README.md ./
 COPY lacuna/ lacuna/
-COPY .git/ .git/
+
+# Set static version for container builds
+RUN echo "__version__ = \"${VERSION}\"" > lacuna/__version__.py
 
 # Install dependencies
 RUN pip install --no-cache-dir build wheel && \
