@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/health")
 async def health_check() -> dict[str, Any]:
-    """Basic health check endpoint."""
+    """Check service health status."""
     return {
         "status": "healthy",
         "version": __version__,

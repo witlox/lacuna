@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from lacuna.api.app import get_engine
+from lacuna.auth.dependencies import get_current_user
+from lacuna.auth.models import AuthenticatedUser
 from lacuna.engine.governance import GovernanceEngine
 from lacuna.models.audit import EventType
 
@@ -49,6 +51,7 @@ async def query_audit_logs(
     limit: int = Query(100, le=1000, description="Maximum records to return"),
     offset: int = Query(0, description="Offset for pagination"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> AuditQueryResponse:
     """Query audit logs with filters.
 
@@ -122,6 +125,7 @@ async def verify_audit_integrity(
     start_time: Optional[str] = Query(None, description="Start time (ISO format)"),
     end_time: Optional[str] = Query(None, description="End time (ISO format)"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> IntegrityVerificationResponse:
     """Verify audit log integrity using hash chain.
 
@@ -160,6 +164,7 @@ async def get_audit_stats(
     start_time: Optional[str] = Query(None, description="Start time (ISO format)"),
     end_time: Optional[str] = Query(None, description="End time (ISO format)"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> AuditStatsResponse:
     """Get audit log statistics.
 

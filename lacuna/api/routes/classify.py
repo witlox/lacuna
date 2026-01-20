@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from lacuna.api.app import get_engine
+from lacuna.auth.dependencies import get_current_user
+from lacuna.auth.models import AuthenticatedUser
 from lacuna.engine.governance import GovernanceEngine
 from lacuna.models.classification import ClassificationContext
 
@@ -17,7 +19,7 @@ class ClassifyRequest(BaseModel):
 
     query: str = Field(..., description="Query or text to classify")
     project: Optional[str] = Field(None, description="Project context")
-    user_id: Optional[str] = Field(None, description="User identifier")
+    user_id: Optional[str] = Field(None, description="User identifier (overrides auth)")
     user_role: Optional[str] = Field(None, description="User role")
     environment: Optional[str] = Field(
         None, description="Environment (dev/staging/prod)"
@@ -46,13 +48,17 @@ class ClassifyResponse(BaseModel):
 async def classify(
     request: ClassifyRequest,
     engine: GovernanceEngine = Depends(get_engine),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> ClassifyResponse:
     """Classify a query or text for data sensitivity.
 
     Returns the classification tier, confidence, and reasoning.
     """
+    # Use request user_id if provided, otherwise use authenticated user
+    effective_user_id = request.user_id or user.user_id
+
     context = ClassificationContext(
-        user_id=request.user_id,
+        user_id=effective_user_id,
         user_role=request.user_role,
         project=request.project,
         environment=request.environment,
@@ -86,7 +92,7 @@ class BatchClassifyRequest(BaseModel):
 
     queries: list[str] = Field(..., description="List of queries to classify")
     project: Optional[str] = Field(None, description="Project context")
-    user_id: Optional[str] = Field(None, description="User identifier")
+    user_id: Optional[str] = Field(None, description="User identifier (overrides auth)")
 
 
 class BatchClassifyResponse(BaseModel):
@@ -100,15 +106,19 @@ class BatchClassifyResponse(BaseModel):
 async def classify_batch(
     request: BatchClassifyRequest,
     engine: GovernanceEngine = Depends(get_engine),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> BatchClassifyResponse:
     """Classify multiple queries in a batch."""
     import time
 
     start = time.time()
 
+    # Use request user_id if provided, otherwise use authenticated user
+    effective_user_id = request.user_id or user.user_id
+
     results = []
     context = ClassificationContext(
-        user_id=request.user_id,
+        user_id=effective_user_id,
         project=request.project,
     )
 

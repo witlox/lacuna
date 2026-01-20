@@ -151,9 +151,7 @@ class TestInMemoryAuditBackendQuery:
         assert len(results) == 1
         assert results[0].resource_id == "file1.csv"
 
-    def test_query_by_event_type(
-        self, backend_with_data: InMemoryAuditBackend
-    ) -> None:
+    def test_query_by_event_type(self, backend_with_data: InMemoryAuditBackend) -> None:
         """Test querying by event type."""
         query = AuditQuery(event_types=[EventType.POLICY_DENY])
         results = backend_with_data.query(query)
@@ -161,9 +159,7 @@ class TestInMemoryAuditBackendQuery:
         assert len(results) == 1
         assert results[0].event_type == EventType.POLICY_DENY
 
-    def test_query_by_time_range(
-        self, backend_with_data: InMemoryAuditBackend
-    ) -> None:
+    def test_query_by_time_range(self, backend_with_data: InMemoryAuditBackend) -> None:
         """Test querying by time range."""
         now = datetime.now(timezone.utc)
         query = AuditQuery(

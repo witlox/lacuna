@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from lacuna.audit.logger import AuditLogger
+from lacuna.auth import AuthenticatedUser, get_current_user
 from lacuna.models.audit import AuditQuery, EventType
 
 router = APIRouter(prefix="/user", tags=["User Web"])
@@ -15,20 +16,17 @@ router = APIRouter(prefix="/user", tags=["User Web"])
 templates = Jinja2Templates(directory="lacuna/web/templates")
 
 
-def get_current_user(request: Request) -> str:
-    """Get current user from request (placeholder for auth)."""
-    # TODO: Implement proper authentication
-    return request.headers.get("X-User-ID", "demo-user")
-
-
 @router.get("/dashboard", response_class=HTMLResponse)
-async def user_dashboard(request: Request, user_id: str = Depends(get_current_user)):
+async def user_dashboard(
+    request: Request,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """User dashboard showing overview of activity."""
     logger = AuditLogger()
 
     try:
         # Get recent activity stats
-        query = AuditQuery(user_id=user_id, limit=100)
+        query = AuditQuery(user_id=user.user_id, limit=100)
         records = logger._backend.query(query)
 
         # Calculate stats
@@ -37,7 +35,9 @@ async def user_dashboard(request: Request, user_id: str = Depends(get_current_us
         denied = sum(1 for r in records if r.action_result in ("denied", "blocked"))
 
         # Get violations (denied requests)
-        violations = [r for r in records if r.action_result in ("denied", "blocked")][:5]
+        violations = [r for r in records if r.action_result in ("denied", "blocked")][
+            :5
+        ]
 
         # Activity by type
         by_type: dict = {}
@@ -49,11 +49,13 @@ async def user_dashboard(request: Request, user_id: str = Depends(get_current_us
             {
                 "request": request,
                 "active_page": "user_dashboard",
-                "current_user": user_id,
+                "current_user": user,
                 "total_requests": total_requests,
                 "successful": successful,
                 "denied": denied,
-                "success_rate": (successful / total_requests * 100) if total_requests > 0 else 100,
+                "success_rate": (
+                    (successful / total_requests * 100) if total_requests > 0 else 100
+                ),
                 "violations": violations,
                 "by_type": by_type,
                 "recent_records": records[:10],
@@ -66,7 +68,7 @@ async def user_dashboard(request: Request, user_id: str = Depends(get_current_us
 @router.get("/history", response_class=HTMLResponse)
 async def user_history(
     request: Request,
-    user_id: str = Depends(get_current_user),
+    user: AuthenticatedUser = Depends(get_current_user),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     event_type: Optional[str] = None,
@@ -75,7 +77,7 @@ async def user_history(
     logger = AuditLogger()
 
     try:
-        query = AuditQuery(user_id=user_id, limit=limit * page)
+        query = AuditQuery(user_id=user.user_id, limit=limit * page)
         records = logger._backend.query(query)
 
         # Filter by event type if specified
@@ -94,7 +96,7 @@ async def user_history(
             {
                 "request": request,
                 "active_page": "user_history",
-                "current_user": user_id,
+                "current_user": user,
                 "records": paginated,
                 "page": page,
                 "limit": limit,
@@ -112,13 +114,13 @@ async def user_history(
 @router.get("/violations", response_class=HTMLResponse)
 async def user_violations(
     request: Request,
-    user_id: str = Depends(get_current_user),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """Show policy violations with explanations and recommendations."""
     logger = AuditLogger()
 
     try:
-        query = AuditQuery(user_id=user_id, limit=500)
+        query = AuditQuery(user_id=user.user_id, limit=500)
         records = logger._backend.query(query)
 
         # Filter to violations only
@@ -142,7 +144,7 @@ async def user_violations(
             {
                 "request": request,
                 "active_page": "user_violations",
-                "current_user": user_id,
+                "current_user": user,
                 "violations": violations[:50],
                 "total_violations": len(violations),
                 "by_type": by_type,
@@ -156,13 +158,13 @@ async def user_violations(
 @router.get("/recommendations", response_class=HTMLResponse)
 async def user_recommendations(
     request: Request,
-    user_id: str = Depends(get_current_user),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """Personalized recommendations for correct behavior."""
     logger = AuditLogger()
 
     try:
-        query = AuditQuery(user_id=user_id, limit=500)
+        query = AuditQuery(user_id=user.user_id, limit=500)
         records = logger._backend.query(query)
 
         violations = [
@@ -176,7 +178,7 @@ async def user_recommendations(
             {
                 "request": request,
                 "active_page": "user_recommendations",
-                "current_user": user_id,
+                "current_user": user,
                 "recommendations": recommendations,
                 "violation_count": len(violations),
             },
@@ -190,12 +192,14 @@ def _generate_recommendations(violations: list) -> list:
     recommendations = []
 
     if not violations:
-        recommendations.append({
-            "type": "success",
-            "title": "Great job!",
-            "message": "You have no policy violations. Keep up the good work!",
-            "icon": "✅",
-        })
+        recommendations.append(
+            {
+                "type": "success",
+                "title": "Great job!",
+                "message": "You have no policy violations. Keep up the good work!",
+                "icon": "✅",
+            }
+        )
         return recommendations
 
     # Analyze patterns
@@ -210,41 +214,49 @@ def _generate_recommendations(violations: list) -> list:
     )
 
     if export_violations > 0:
-        recommendations.append({
-            "type": "warning",
-            "title": "Data Export Issues",
-            "message": f"You have {export_violations} blocked export attempts. "
-            "Consider checking data classification before exporting. "
-            "Use 'lacuna classify' to check sensitivity levels.",
-            "icon": "📤",
-        })
+        recommendations.append(
+            {
+                "type": "warning",
+                "title": "Data Export Issues",
+                "message": f"You have {export_violations} blocked export attempts. "
+                "Consider checking data classification before exporting. "
+                "Use 'lacuna classify' to check sensitivity levels.",
+                "icon": "📤",
+            }
+        )
 
     if access_violations > 0:
-        recommendations.append({
-            "type": "info",
-            "title": "Access Permission Issues",
-            "message": f"You have {access_violations} access denials. "
-            "Ensure you have proper authorization before accessing sensitive data. "
-            "Contact your administrator if you need access.",
-            "icon": "🔐",
-        })
+        recommendations.append(
+            {
+                "type": "info",
+                "title": "Access Permission Issues",
+                "message": f"You have {access_violations} access denials. "
+                "Ensure you have proper authorization before accessing sensitive data. "
+                "Contact your administrator if you need access.",
+                "icon": "🔐",
+            }
+        )
 
     if classification_issues > 0:
-        recommendations.append({
-            "type": "info",
-            "title": "Classification Awareness",
-            "message": f"You've encountered {classification_issues} classification issues. "
-            "Review the data classification tiers: PROPRIETARY, INTERNAL, PUBLIC.",
-            "icon": "📊",
-        })
+        recommendations.append(
+            {
+                "type": "info",
+                "title": "Classification Awareness",
+                "message": f"You've encountered {classification_issues} classification issues. "
+                "Review the data classification tiers: PROPRIETARY, INTERNAL, PUBLIC.",
+                "icon": "📊",
+            }
+        )
 
     # General recommendations
-    recommendations.append({
-        "type": "tip",
-        "title": "Best Practice",
-        "message": "Always check data sensitivity with 'lacuna evaluate' before "
-        "sharing or exporting data.",
-        "icon": "💡",
-    })
+    recommendations.append(
+        {
+            "type": "tip",
+            "title": "Best Practice",
+            "message": "Always check data sensitivity with 'lacuna evaluate' before "
+            "sharing or exporting data.",
+            "icon": "💡",
+        }
+    )
 
     return recommendations

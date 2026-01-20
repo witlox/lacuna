@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 import yaml
-from fastapi import APIRouter, Form, Query, Request
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from lacuna.audit.logger import AuditLogger
+from lacuna.auth import AuthenticatedUser, require_admin
 from lacuna.config import get_settings
 from lacuna.models.audit import AuditQuery
 
@@ -23,20 +24,11 @@ def get_config_path() -> Path:
     return get_settings().config_path
 
 
-def is_admin(request: Request) -> bool:
-    """Check if current user is admin (placeholder for auth)."""
-    # TODO: Implement proper authentication
-    return request.headers.get("X-Admin", "true").lower() == "true"
-
-
-def require_admin(request: Request) -> None:
-    """Require admin access."""
-    if not is_admin(request):
-        raise Exception("Admin access required")
-
-
 @router.get("/", response_class=HTMLResponse)
-async def admin_dashboard(request: Request):
+async def admin_dashboard(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
     """Admin dashboard with system overview."""
     settings = get_settings()
     logger = AuditLogger()
@@ -71,6 +63,7 @@ async def admin_dashboard(request: Request):
                 "request": request,
                 "active_page": "admin_dashboard",
                 "is_admin": True,
+                "current_user": admin,
                 "settings": settings,
                 "total_events": total_events,
                 "unique_users": unique_users,
@@ -87,6 +80,7 @@ async def admin_dashboard(request: Request):
 @router.get("/users", response_class=HTMLResponse)
 async def admin_users(
     request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
 ):
@@ -149,6 +143,7 @@ async def admin_users(
 @router.get("/audit", response_class=HTMLResponse)
 async def admin_audit(
     request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     user_id: Optional[str] = None,
@@ -196,8 +191,11 @@ async def admin_audit(
 
 
 @router.get("/config", response_class=HTMLResponse)
-async def admin_config(request: Request):
-    """Configuration management."""
+async def admin_config(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
+    """Manage system configuration settings."""
     settings = get_settings()
 
     # Load config files
@@ -230,6 +228,7 @@ async def admin_config(request: Request):
 @router.post("/config/update", response_class=HTMLResponse)
 async def admin_config_update(
     request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
     key: str = Form(...),
     value: str = Form(...),
 ):
@@ -276,6 +275,7 @@ async def admin_config_update(
 @router.post("/terms/add", response_class=HTMLResponse)
 async def admin_terms_add(
     request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
     category: str = Form(...),
     value: str = Form(...),
 ):
@@ -299,6 +299,7 @@ async def admin_terms_add(
 @router.post("/terms/remove", response_class=HTMLResponse)
 async def admin_terms_remove(
     request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
     category: str = Form(...),
     value: str = Form(...),
 ):
@@ -320,7 +321,10 @@ async def admin_terms_remove(
 
 
 @router.get("/policies", response_class=HTMLResponse)
-async def admin_policies(request: Request):
+async def admin_policies(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
     """Policy management page."""
     settings = get_settings()
 
@@ -331,13 +335,15 @@ async def admin_policies(request: Request):
         for f in policies_dir.glob("*.rego"):
             with open(f) as pf:
                 content = pf.read()
-            policy_files.append({
-                "name": f.name,
-                "path": str(f),
-                "size": f.stat().st_size,
-                "modified": datetime.fromtimestamp(f.stat().st_mtime),
-                "content": content[:500] + "..." if len(content) > 500 else content,
-            })
+            policy_files.append(
+                {
+                    "name": f.name,
+                    "path": str(f),
+                    "size": f.stat().st_size,
+                    "modified": datetime.fromtimestamp(f.stat().st_mtime),
+                    "content": content[:500] + "..." if len(content) > 500 else content,
+                }
+            )
 
     return templates.TemplateResponse(
         "admin/policies.html",
@@ -352,7 +358,10 @@ async def admin_policies(request: Request):
 
 
 @router.get("/alerts", response_class=HTMLResponse)
-async def admin_alerts(request: Request):
+async def admin_alerts(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
     """Real-time alerts page."""
     logger = AuditLogger()
 
@@ -363,9 +372,7 @@ async def admin_alerts(request: Request):
 
         # Filter for alert-worthy events
         alerts = [
-            r
-            for r in records
-            if r.action_result in ("denied", "blocked", "failed")
+            r for r in records if r.action_result in ("denied", "blocked", "failed")
         ][:20]
 
         return templates.TemplateResponse(
@@ -379,3 +386,110 @@ async def admin_alerts(request: Request):
         )
     finally:
         logger.stop()
+
+
+# =============================================================================
+# API Key Management Routes
+# =============================================================================
+
+
+@router.get("/api-keys", response_class=HTMLResponse)
+async def admin_api_keys(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
+    """Display API key management page."""
+    from lacuna.auth.api_keys import get_api_key_store
+
+    store = get_api_key_store()
+    api_keys = store.list_all()
+
+    # Sort by creation date (newest first)
+    api_keys.sort(key=lambda k: k.created_at, reverse=True)
+
+    return templates.TemplateResponse(
+        "admin/api_keys.html",
+        {
+            "request": request,
+            "active_page": "admin_api_keys",
+            "is_admin": True,
+            "api_keys": api_keys,
+            "new_key": request.query_params.get("new_key"),
+        },
+    )
+
+
+@router.post("/api-keys/create", response_class=HTMLResponse)
+async def admin_api_keys_create(
+    request: Request,
+    admin: AuthenticatedUser = Depends(require_admin),
+    name: str = Form(...),
+    service_account_id: str = Form(...),
+    description: str = Form(""),
+    groups: str = Form(""),
+    expires_days: Optional[int] = Form(None),
+):
+    """Create a new API key."""
+    from datetime import timezone
+
+    from lacuna.auth.api_keys import get_api_key_store
+
+    store = get_api_key_store()
+
+    # Parse groups
+    groups_list = [g.strip() for g in groups.split(",") if g.strip()]
+
+    # Calculate expiry
+    expires_at = None
+    if expires_days and expires_days > 0:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days)
+
+    # Create the key
+    api_key, raw_key = store.create(
+        name=name,
+        service_account_id=service_account_id,
+        description=description or None,
+        groups=groups_list,
+        expires_at=expires_at,
+        created_by=admin.user_id,
+    )
+
+    # Redirect with the raw key (shown once)
+    return RedirectResponse(
+        url=f"/admin/api-keys?new_key={raw_key}",
+        status_code=303,
+    )
+
+
+@router.post("/api-keys/{key_id}/revoke", response_class=HTMLResponse)
+async def admin_api_keys_revoke(
+    request: Request,
+    key_id: str,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
+    """Revoke an API key."""
+    from uuid import UUID
+
+    from lacuna.auth.api_keys import get_api_key_store
+
+    store = get_api_key_store()
+    store.revoke(UUID(key_id), revoked_by=admin.user_id)
+
+    return RedirectResponse(url="/admin/api-keys?revoked=1", status_code=303)
+
+
+@router.post("/api-keys/{key_id}/delete", response_class=HTMLResponse)
+async def admin_api_keys_delete(
+    request: Request,
+    key_id: str,
+    admin: AuthenticatedUser = Depends(require_admin),
+):
+    """Delete an API key."""
+    from uuid import UUID
+
+    from lacuna.auth.api_keys import get_api_key_store
+
+    store = get_api_key_store()
+    store.delete(UUID(key_id))
+
+    return RedirectResponse(url="/admin/api-keys?deleted=1", status_code=303)

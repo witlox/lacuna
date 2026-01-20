@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}API Keys - Lacuna Admin{% endblock %}
+
+{% block nav_items %}
+<a href="/admin/" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_dashboard' %}bg-indigo-700{% endif %}">Dashboard</a>
+<a href="/admin/users" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_users' %}bg-indigo-700{% endif %}">Users</a>
+<a href="/admin/audit" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_audit' %}bg-indigo-700{% endif %}">Audit</a>
+<a href="/admin/policies" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_policies' %}bg-indigo-700{% endif %}">Policies</a>
+<a href="/admin/config" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_config' %}bg-indigo-700{% endif %}">Config</a>
+<a href="/admin/api-keys" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_api_keys' %}bg-indigo-700{% endif %}">API Keys</a>
+<a href="/admin/alerts" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 {% if active_page == 'admin_alerts' %}bg-indigo-700{% endif %}">Alerts</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900">API Keys</h2>
+            <p class="mt-1 text-sm text-gray-500">Manage service account API keys for automation and integrations</p>
+        </div>
+    </div>
+
+    <!-- New Key Alert -->
+    {% if new_key %}
+    <div class="bg-green-50 border-l-4 border-green-400 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <span class="text-2xl">🔑</span>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">API Key Created Successfully</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p class="font-bold">Copy this key now - it won't be shown again:</p>
+                    <code class="mt-2 block bg-green-100 p-3 rounded font-mono text-sm break-all">{{ new_key }}</code>
+                </div>
+                <p class="mt-2 text-xs text-green-600">
+                    Store this securely. Use as: <code>Authorization: Bearer {{ new_key }}</code>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Create New Key Form -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Create New API Key</h3>
+            <p class="mt-1 text-sm text-gray-500">
+                Generate a new API key for service accounts (dbt, Databricks, CI/CD pipelines, etc.)
+            </p>
+            
+            <form action="/admin/api-keys/create" method="POST" class="mt-5 space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input type="text" name="name" id="name" required
+                               placeholder="e.g., dbt-production"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="service_account_id" class="block text-sm font-medium text-gray-700">Service Account ID</label>
+                        <input type="text" name="service_account_id" id="service_account_id" required
+                               placeholder="e.g., svc-dbt"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Username for audit logs</p>
+                    </div>
+                    
+                    <div>
+                        <label for="groups" class="block text-sm font-medium text-gray-700">Groups (comma-separated)</label>
+                        <input type="text" name="groups" id="groups"
+                               placeholder="e.g., data-engineers, pipeline-users"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="expires_days" class="block text-sm font-medium text-gray-700">Expires In (days)</label>
+                        <input type="number" name="expires_days" id="expires_days" min="0"
+                               placeholder="Leave empty for no expiry"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="2"
+                              placeholder="Optional description for this API key"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                </div>
+                
+                <div>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        🔑 Generate API Key
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Keys -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Existing API Keys</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ api_keys|length }} API key(s) configured</p>
+        </div>
+        
+        {% if api_keys %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key Prefix</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Account</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Groups</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Used</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for key in api_keys %}
+                    <tr class="{% if not key.is_valid %}bg-red-50{% endif %}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ key.name }}</div>
+                            {% if key.description %}
+                            <div class="text-xs text-gray-500">{{ key.description[:50] }}{% if key.description|length > 50 %}...{% endif %}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <code class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ key.key_prefix }}...</code>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ key.service_account_id }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if key.groups %}
+                                {% for group in key.groups[:3] %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">{{ group }}</span>
+                                {% endfor %}
+                                {% if key.groups|length > 3 %}
+                                <span class="text-xs text-gray-400">+{{ key.groups|length - 3 }} more</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if key.is_valid %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                            {% elif key.is_expired %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Expired
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Revoked
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if key.last_used_at %}
+                            {{ key.last_used_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            <span class="text-gray-400">Never</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ key.created_at.strftime('%Y-%m-%d') }}
+                            <div class="text-xs text-gray-400">by {{ key.created_by }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {% if key.is_active %}
+                            <form action="/admin/api-keys/{{ key.id }}/revoke" method="POST" class="inline"
+                                  onsubmit="return confirm('Revoke this API key? Services using it will stop working.');">
+                                <button type="submit" class="text-yellow-600 hover:text-yellow-900">Revoke</button>
+                            </form>
+                            {% else %}
+                            <form action="/admin/api-keys/{{ key.id }}/delete" method="POST" class="inline"
+                                  onsubmit="return confirm('Permanently delete this API key?');">
+                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-4 py-12 text-center text-gray-500">
+            <span class="text-4xl">🔑</span>
+            <p class="mt-2">No API keys configured yet</p>
+            <p class="text-sm">Create one above to enable service account access</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Usage Instructions -->
+    <div class="bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900">Using API Keys</h3>
+        <p class="mt-2 text-sm text-gray-600">Include the API key in your requests:</p>
+        <pre class="mt-3 bg-gray-800 text-gray-100 p-4 rounded text-sm overflow-x-auto">
+# HTTP Header
+Authorization: Bearer lac_xxxxxxxxxx...
+
+# cURL example
+curl -H "Authorization: Bearer lac_your_key_here" \
+     https://lacuna.example.com/api/v1/classify
+
+# Python example
+import requests
+headers = {"Authorization": "Bearer lac_your_key_here"}
+response = requests.post(
+    "https://lacuna.example.com/api/v1/classify",
+    headers=headers,
+    json={"query": "SELECT * FROM users"}
+)
+        </pre>
+    </div>
+</div>
+{% endblock %}

@@ -186,31 +186,55 @@ def config_list() -> None:
     click.echo(f"{'=' * 60}")
 
     sections: list[tuple[str, list[tuple[str, object]]]] = [
-        ("General", [
-            ("environment", settings.environment),
-            ("debug", settings.debug),
-            ("log_level", settings.log_level),
-        ]),
-        ("Classification", [
-            ("classification.strategy", settings.classification.strategy),
-            ("classification.confidence_threshold", settings.classification.confidence_threshold),
-            ("classification.heuristic_enabled", settings.classification.heuristic_enabled),
-            ("classification.embedding_enabled", settings.classification.embedding_enabled),
-            ("classification.llm_enabled", settings.classification.llm_enabled),
-        ]),
-        ("Policy", [
-            ("policy.enabled", settings.policy.enabled),
-            ("policy.opa_endpoint", settings.policy.opa_endpoint),
-        ]),
-        ("Audit", [
-            ("audit.enabled", settings.audit.enabled),
-            ("audit.retention_days", settings.audit.retention_days),
-            ("audit.verify_integrity", settings.audit.verify_integrity),
-        ]),
-        ("Lineage", [
-            ("lineage.enabled", settings.lineage.enabled),
-            ("lineage.max_depth", settings.lineage.max_depth),
-        ]),
+        (
+            "General",
+            [
+                ("environment", settings.environment),
+                ("debug", settings.debug),
+                ("log_level", settings.log_level),
+            ],
+        ),
+        (
+            "Classification",
+            [
+                ("classification.strategy", settings.classification.strategy),
+                (
+                    "classification.confidence_threshold",
+                    settings.classification.confidence_threshold,
+                ),
+                (
+                    "classification.heuristic_enabled",
+                    settings.classification.heuristic_enabled,
+                ),
+                (
+                    "classification.embedding_enabled",
+                    settings.classification.embedding_enabled,
+                ),
+                ("classification.llm_enabled", settings.classification.llm_enabled),
+            ],
+        ),
+        (
+            "Policy",
+            [
+                ("policy.enabled", settings.policy.enabled),
+                ("policy.opa_endpoint", settings.policy.opa_endpoint),
+            ],
+        ),
+        (
+            "Audit",
+            [
+                ("audit.enabled", settings.audit.enabled),
+                ("audit.retention_days", settings.audit.retention_days),
+                ("audit.verify_integrity", settings.audit.verify_integrity),
+            ],
+        ),
+        (
+            "Lineage",
+            [
+                ("lineage.enabled", settings.lineage.enabled),
+                ("lineage.max_depth", settings.lineage.max_depth),
+            ],
+        ),
     ]
 
     for section_name, items in sections:

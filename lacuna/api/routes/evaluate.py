@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from lacuna.api.app import get_engine
+from lacuna.auth.dependencies import get_current_user
+from lacuna.auth.models import AuthenticatedUser
 from lacuna.engine.governance import GovernanceEngine
 from lacuna.models.data_operation import DataOperation, OperationType, UserContext
 
@@ -20,7 +22,9 @@ class EvaluateRequest(BaseModel):
     )
     resource_type: str = Field(..., description="Resource type (file, table, dataset)")
     resource_id: str = Field(..., description="Resource identifier")
-    user_id: str = Field(..., description="User performing the operation")
+    user_id: Optional[str] = Field(
+        None, description="User ID override (defaults to auth)"
+    )
     user_role: Optional[str] = Field(None, description="User role")
     destination: Optional[str] = Field(
         None, description="Destination for exports/writes"
@@ -59,6 +63,7 @@ class EvaluateResponse(BaseModel):
 async def evaluate_operation(
     request: EvaluateRequest,
     engine: GovernanceEngine = Depends(get_engine),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> EvaluateResponse:
     """Evaluate a data operation against governance policies.
 
@@ -72,6 +77,9 @@ async def evaluate_operation(
         except ValueError:
             op_type = OperationType.READ
 
+        # Use request user_id if provided, otherwise use authenticated user
+        effective_user_id = request.user_id or user.user_id
+
         # Build operation
         operation = DataOperation(
             operation_type=op_type,
@@ -82,7 +90,7 @@ async def evaluate_operation(
             destination_encrypted=request.destination_encrypted,
             sources=request.sources or [],
             user=UserContext(
-                user_id=request.user_id,
+                user_id=effective_user_id,
                 user_role=request.user_role,
             ),
             purpose=request.purpose,
@@ -114,7 +122,9 @@ class ExportEvaluateRequest(BaseModel):
 
     source: str = Field(..., description="Source resource ID")
     destination: str = Field(..., description="Destination path or URL")
-    user_id: str = Field(..., description="User performing the export")
+    user_id: Optional[str] = Field(
+        None, description="User ID override (defaults to auth)"
+    )
     purpose: Optional[str] = Field(None, description="Business justification")
 
 
@@ -122,15 +132,19 @@ class ExportEvaluateRequest(BaseModel):
 async def evaluate_export(
     request: ExportEvaluateRequest,
     engine: GovernanceEngine = Depends(get_engine),
+    user: AuthenticatedUser = Depends(get_current_user),
 ) -> EvaluateResponse:
     """Evaluate an export operation.
 
     Simplified endpoint specifically for export operations.
     """
+    # Use request user_id if provided, otherwise use authenticated user
+    effective_user_id = request.user_id or user.user_id
+
     result = engine.evaluate_export(
         source=request.source,
         destination=request.destination,
-        user_id=request.user_id,
+        user_id=effective_user_id,
         purpose=request.purpose,
     )
 

@@ -1357,6 +1357,99 @@ curl http://localhost:9090/metrics
 
 ---
 
+---
+
+## Authentication
+
+Lacuna supports two authentication methods, designed for enterprise deployment behind a reverse proxy or API gateway.
+
+### Authentication Methods
+
+| Method | Use Case | Header/Mechanism |
+|--------|----------|------------------|
+| **Reverse Proxy Headers** | Human users via OIDC/SSO | X-User, X-Email, X-Groups |
+| **API Keys** | Service accounts, automation | Authorization: Bearer lac_xxx |
+
+### Reverse Proxy Authentication (OIDC/SSO)
+
+In production, Lacuna runs behind a reverse proxy (oauth2-proxy, Traefik, nginx-oidc, etc.) that handles authentication and forwards user identity via headers:
+
+```yaml
+# Environment variables (config)
+LACUNA_AUTH_USER_HEADER=X-User         # User ID header
+LACUNA_AUTH_EMAIL_HEADER=X-Email       # Email header
+LACUNA_AUTH_GROUPS_HEADER=X-Groups     # Comma-separated groups
+LACUNA_AUTH_NAME_HEADER=X-Name         # Display name header
+LACUNA_AUTH_ADMIN_GROUP=lacuna-admins  # Group for admin access
+```
+
+Example nginx configuration with oauth2-proxy:
+
+```nginx
+location / {
+    auth_request /oauth2/auth;
+    auth_request_set $user   $upstream_http_x_auth_request_user;
+    auth_request_set $email  $upstream_http_x_auth_request_email;
+    auth_request_set $groups $upstream_http_x_auth_request_groups;
+    
+    proxy_set_header X-User $user;
+    proxy_set_header X-Email $email;
+    proxy_set_header X-Groups $groups;
+    
+    proxy_pass http://lacuna:8000;
+}
+```
+
+### API Key Authentication (Service Accounts)
+
+For service accounts (dbt, CI/CD pipelines, Databricks), use API keys:
+
+1. **Create via Admin UI**: Navigate to Admin > API Keys
+2. **Create via CLI**:
+   ```bash
+   lacuna admin apikey create \
+     --name "dbt-production" \
+     --service-account "svc-dbt" \
+     --groups "data-engineers"
+   ```
+
+3. **Use in requests**:
+   ```bash
+   curl -H "Authorization: Bearer lac_your_key_here" \
+        https://lacuna.example.com/api/v1/classify
+   ```
+
+API key format: `lac_` prefix followed by 32+ secure random characters.
+
+### Role-Based Access Control
+
+| Role | Access | Determined By |
+|------|--------|---------------|
+| **Admin** | Full access, API key management, config | Member of `lacuna-admins` group |
+| **User** | Query, classify, view own audit logs | Any authenticated user |
+
+### Dev Mode Authentication
+
+In dev mode (`lacuna dev`), authentication is bypassed and a default admin user is used:
+
+```python
+# Automatic dev user
+user_id: "dev-user"
+email: "dev@localhost"
+groups: ["lacuna-admins", "developers"]
+is_admin: True
+```
+
+**Warning**: Never use dev mode in production.
+
+### Security Best Practices
+
+1. **Always use TLS** - API keys are sensitive credentials
+2. **Rotate API keys regularly** - Set expiration dates
+3. **Use service-specific keys** - One key per service for auditability
+4. **Trust only internal proxies** - Verify X-Forwarded-For headers
+5. **Monitor API key usage** - Check last_used_at in admin UI
+
 ## Related Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design

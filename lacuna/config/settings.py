@@ -116,6 +116,53 @@ class RoutingSettings(BaseSettings):
     public_web_search: bool = True
 
 
+class AuthSettings(BaseSettings):
+    """Authentication configuration."""
+
+    # Enable/disable authentication
+    enabled: bool = Field(
+        default=True, description="Enable authentication (disabled in dev mode)"
+    )
+
+    # Reverse proxy header configuration
+    user_header: str = Field(
+        default="X-User", description="Header containing username from proxy"
+    )
+    email_header: str = Field(
+        default="X-Email", description="Header containing email from proxy"
+    )
+    groups_header: str = Field(
+        default="X-Groups", description="Header containing comma-separated groups"
+    )
+    name_header: str = Field(
+        default="X-Name", description="Header containing display name"
+    )
+
+    # Admin configuration
+    admin_group: str = Field(
+        default="lacuna-admins", description="Group name for admin access"
+    )
+
+    # API key configuration
+    api_key_header: str = Field(
+        default="Authorization", description="Header for API key (Bearer token)"
+    )
+    api_key_prefix: str = Field(
+        default="Bearer", description="Prefix for API key in header"
+    )
+
+    # Security settings
+    trusted_proxies: list[str] = Field(
+        default_factory=lambda: [
+            "127.0.0.1",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+        ],
+        description="Trusted proxy IP ranges",
+    )
+
+
 class Settings(BaseSettings):
     """Main application settings."""
 
@@ -163,6 +210,7 @@ class Settings(BaseSettings):
     policy: PolicySettings = Field(default_factory=PolicySettings)
     monitoring: MonitoringSettings = Field(default_factory=MonitoringSettings)
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
 
     # Proprietary terms
     proprietary_projects: list[str] = Field(default_factory=list)

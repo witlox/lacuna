@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from lacuna.api.app import get_engine
+from lacuna.auth.dependencies import get_current_user
+from lacuna.auth.models import AuthenticatedUser
 from lacuna.engine.governance import GovernanceEngine
 
 router = APIRouter()
@@ -44,6 +46,7 @@ async def get_lineage(
     artifact_id: str,
     max_depth: int = Query(10, description="Maximum traversal depth"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> LineageGraphResponse:
     """Get lineage information for an artifact.
 
@@ -101,6 +104,7 @@ async def get_upstream(
     artifact_id: str,
     max_depth: int = Query(10, description="Maximum traversal depth"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> UpstreamResponse:
     """Get upstream dependencies of an artifact."""
     upstream = engine.get_upstream(artifact_id)
@@ -124,6 +128,7 @@ async def get_downstream(
     artifact_id: str,
     max_depth: int = Query(10, description="Maximum traversal depth"),
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> DownstreamResponse:
     """Get downstream dependents of an artifact."""
     downstream = engine.get_downstream(artifact_id)
@@ -147,13 +152,13 @@ class ImpactAnalysisResponse(BaseModel):
 async def get_impact_analysis(
     artifact_id: str,
     engine: GovernanceEngine = Depends(get_engine),
+    _user: AuthenticatedUser = Depends(get_current_user),
 ) -> ImpactAnalysisResponse:
     """Analyze impact of changes to an artifact.
 
     Shows all downstream dependencies that would be affected
     by changes to this artifact.
     """
-
     tracker = engine._lineage_tracker
     analysis = tracker.get_impact_analysis(artifact_id)
 
