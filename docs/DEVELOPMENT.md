@@ -500,7 +500,7 @@ Recommended extensions:
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Code style guidelines
 - Pull request process
 - Testing requirements

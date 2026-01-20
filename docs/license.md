@@ -76,7 +76,7 @@ Lacuna uses FOSSA for automated license compliance scanning:
 
 By contributing to Lacuna, you agree that your contributions will be licensed under the Apache License 2.0.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Questions
 
