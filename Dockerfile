@@ -2,7 +2,7 @@
 # Multi-stage build for efficient image size
 
 # Build stage
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir build wheel && \
     pip wheel --no-cache-dir --wheel-dir /app/wheels -e .
 
 # Runtime stage
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 WORKDIR /app
 
